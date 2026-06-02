@@ -1,0 +1,25 @@
+{
+  "short_name": "Aegis Pill",
+  "name": "Aegis Pill Tracker & Reminders",
+  "description": "Premium 10-year track and reminder PWA for daily pill regimens.",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0d0e12",
+  "theme_color": "#0d0e12",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "categories": ["medical", "health", "lifestyle"]
+}
