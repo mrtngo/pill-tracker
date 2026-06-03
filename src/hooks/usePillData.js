@@ -88,6 +88,7 @@ export const usePillData = () => {
     setPillName('Pastilla Diaria');
     setReminderTime('21:00');
     setStartDate(getLocalDateString());
+    localStorage.removeItem('aegis_last_notified_date');
   }, []);
 
   // Calculate streaks

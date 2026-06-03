@@ -79,14 +79,17 @@ export const startReminderCheck = (reminderTimeStr, logs, pillName) => {
     const currentMinutes = String(now.getMinutes()).padStart(2, '0');
     const currentTimeStr = `${currentHours}:${currentMinutes}`;
 
-    // If current time matches target reminder time, check if pill was taken
-    if (currentTimeStr === reminderTimeStr) {
+    // If current time is equal to or past the scheduled reminder time
+    if (currentTimeStr >= reminderTimeStr) {
       const isTaken = logs[todayStr]?.taken;
-      if (!isTaken) {
+      const lastNotifiedDate = localStorage.getItem('aegis_last_notified_date');
+
+      if (!isTaken && lastNotifiedDate !== todayStr) {
         sendNotification(
           `¡Hora de tu ${pillName}!`,
           `No olvides registrar tu dosis de esta noche. Toca para registrar.`
         );
+        localStorage.setItem('aegis_last_notified_date', todayStr);
       }
     }
   };
@@ -94,9 +97,22 @@ export const startReminderCheck = (reminderTimeStr, logs, pillName) => {
   // Run check immediately and then every minute
   check();
   reminderIntervalId = setInterval(check, 60 * 1000);
+
+  // Add event listeners to check immediately when tab becomes visible or focused
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      check();
+    }
+  };
+
+  window.addEventListener('visibilitychange', handleVisibilityChange);
+  window.addEventListener('focus', check);
+
   return () => {
     if (reminderIntervalId) {
       clearInterval(reminderIntervalId);
     }
+    window.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.removeEventListener('focus', check);
   };
 };
