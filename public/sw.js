@@ -63,16 +63,28 @@ self.addEventListener('fetch', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   
+  const targetUrl = self.location.origin + '/';
+  
   // Open the app or focus the window if already open
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Check if there is already an open window of our origin
       for (const client of clientList) {
-        if (client.url === '/' && 'focus' in client) {
+        if (client.url.startsWith(self.location.origin) && 'focus' in client) {
+          if (event.action === 'confirm') {
+            client.postMessage({ type: 'LOG_PILL_TAKEN' });
+          }
           return client.focus();
         }
       }
+      
+      // If no window is open, open a new one with confirm param if clicked confirm
+      let urlToOpen = '/';
+      if (event.action === 'confirm') {
+        urlToOpen = '/?action=confirm';
+      }
       if (self.clients.openWindow) {
-        return self.clients.openWindow('/');
+        return self.clients.openWindow(urlToOpen);
       }
     })
   );

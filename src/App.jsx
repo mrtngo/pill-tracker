@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { usePillData } from './hooks/usePillData';
+import { usePillData, getLocalDateString } from './hooks/usePillData';
 import { startReminderCheck } from './utils/notifications';
 import Dashboard from './components/Dashboard';
 import CalendarView from './components/CalendarView';
@@ -38,6 +38,36 @@ export default function App() {
       return () => clearTimeout(timer);
     }
   }, [toast.visible]);
+
+  // Handle URL query parameters on startup (e.g. ?action=confirm)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('action') === 'confirm') {
+      const todayStr = getLocalDateString();
+      logPill(todayStr, 'taken');
+      showToast(`¡Tu ${pillName} de hoy ha sido registrada!`);
+      // Clean up URL parameters so it doesn't log again on page reload
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [logPill, pillName]);
+
+  // Listen to messages from the Service Worker
+  useEffect(() => {
+    const handleSWMessage = (event) => {
+      if (event.data && event.data.type === 'LOG_PILL_TAKEN') {
+        const todayStr = getLocalDateString();
+        logPill(todayStr, 'taken');
+        showToast(`¡Tu ${pillName} de hoy ha sido registrada!`);
+      }
+    };
+
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.addEventListener('message', handleSWMessage);
+      return () => {
+        navigator.serviceWorker.removeEventListener('message', handleSWMessage);
+      };
+    }
+  }, [logPill, pillName]);
 
   useEffect(() => {
     const stopChecking = startReminderCheck(reminderTime, logs, pillName);

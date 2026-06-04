@@ -116,3 +116,68 @@ export const startReminderCheck = (reminderTimeStr, logs, pillName) => {
     window.removeEventListener('focus', check);
   };
 };
+
+const PUBLIC_VAPID_KEY = import.meta.env.VITE_PUBLIC_VAPID_KEY || 'BHS4IqZrtQSFlBUE4IHEp7HR1YeOHa2iTUtP9RUjP_r1Ygb0SeChVvHhufqvPnmdzdnH6GxUttALSXKBICbDyN8';
+
+const urlBase64ToUint8Array = (base64String) => {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding)
+    .replace(/-/g, '+')
+    .replace(/_/g, '/');
+
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+};
+
+export const subscribeToPushNotifications = async (reminderTime, pillName) => {
+  if (!isNotificationSupported()) {
+    console.warn('Push notifications not supported on this device.');
+    return null;
+  }
+
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    
+    // Check if subscription already exists
+    let subscription = await registration.pushManager.getSubscription();
+    
+    const convertedVapidKey = urlBase64ToUint8Array(PUBLIC_VAPID_KEY);
+    
+    // Always resubscribe or update to make sure the key matches and subscription is fresh
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: convertedVapidKey
+      });
+    }
+
+    // Send subscription to backend
+    const response = await fetch('/api/subscribe', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        subscription,
+        reminderTime,
+        timezoneOffset: new Date().getTimezoneOffset(),
+        pillName
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to save push subscription on server');
+    }
+
+    console.log('Successfully subscribed to Web Push:', subscription);
+    return subscription;
+  } catch (error) {
+    console.error('Error during push subscription registration:', error);
+    return null;
+  }
+};

@@ -3,7 +3,8 @@ import {
   getNotificationPermissionState, 
   requestNotificationPermission, 
   sendNotification, 
-  isNotificationSupported 
+  isNotificationSupported,
+  subscribeToPushNotifications
 } from '../utils/notifications';
 import { getLocalDateString } from '../hooks/usePillData';
 
@@ -29,12 +30,17 @@ export default function SettingsView({
     setNotifState(getNotificationPermissionState());
   }, []);
 
-  const handleSaveSettings = (e) => {
+  const handleSaveSettings = async (e) => {
     e.preventDefault();
     setPillName(tempName);
     setReminderTime(tempTime);
     setStartDate(tempStart);
     showToast('Ajustes guardados correctamente');
+    
+    if (getNotificationPermissionState() === 'granted') {
+      // Sync the settings with the push backend
+      await subscribeToPushNotifications(tempTime, tempName);
+    }
   };
 
   const handleToggleNotifications = async () => {
@@ -49,6 +55,8 @@ export default function SettingsView({
     if (state === 'granted') {
       showToast('¡Notificaciones activadas!');
       sendNotification('Notificaciones Activas', 'Recibirás un aviso diario a la hora configurada.');
+      // Register with the push backend
+      await subscribeToPushNotifications(reminderTime, pillName);
     } else if (state === 'denied') {
       showToast('Notificaciones bloqueadas. Actívalas en los ajustes del navegador.');
     }
