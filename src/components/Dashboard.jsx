@@ -303,24 +303,7 @@ export default function Dashboard({
         </div>
       </div>
 
-      {/* Quick Actions Panel */}
-      <div className="glass-panel">
-        <h3 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '14px', color: 'var(--text-primary)' }}>Acciones Rápidas</h3>
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <button 
-            className="btn-secondary" 
-            style={{ flex: 1 }} 
-            onClick={handleYesterdayLog}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 8 8 12 12 16"></polyline>
-              <line x1="16" y1="12" x2="8" y2="12"></line>
-            </svg>
-            {logs[getLocalDateString(new Date(Date.now() - 86400000))]?.taken ? 'Deshacer Ayer' : "Registrar Ayer"}
-          </button>
-        </div>
-      </div>
+
       {/* Install App Guide (only shown when not running as standalone PWA) */}
       {!isStandalone && (
         <div className="glass-panel install-guide-panel" style={{ marginTop: '20px' }}>

@@ -3,14 +3,23 @@ import { getLocalDateString } from '../hooks/usePillData';
 
 export default function StatsView({ logs, startDate, currentStreak, longestStreak, stats }) {
   
-  // Calculate compliance for the last 6 months (forced Spanish locale)
+  // Calculate compliance since start date (forced Spanish locale)
   const getMonthlyComplianceData = () => {
     const data = [];
     const today = new Date();
+    const start = new Date(startDate);
+    
+    const startYear = start.getFullYear();
+    const startMonth = start.getMonth();
+    const todayYear = today.getFullYear();
+    const todayMonth = today.getMonth();
 
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date();
-      d.setMonth(today.getMonth() - i);
+    // Calculate total months difference
+    const totalMonths = (todayYear - startYear) * 12 + (todayMonth - startMonth) + 1;
+    const monthsToShow = totalMonths > 0 ? totalMonths : 1;
+
+    for (let i = monthsToShow - 1; i >= 0; i--) {
+      const d = new Date(todayYear, todayMonth - i, 1);
       const year = d.getFullYear();
       const month = d.getMonth();
       
@@ -185,7 +194,7 @@ export default function StatsView({ logs, startDate, currentStreak, longestStrea
       {/* SVG Bar Chart Card */}
       <div className="glass-panel">
         <h2>Constancia Mensual</h2>
-        <p className="subtitle">Porcentaje de tomas en los últimos 6 meses</p>
+        <p className="subtitle">Porcentaje de tomas por mes desde el inicio de tu ritual</p>
 
         <div className="chart-wrapper">
           <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="svg-bar-chart">
@@ -220,7 +229,7 @@ export default function StatsView({ logs, startDate, currentStreak, longestStrea
             {monthlyData.map((item, idx) => {
               const barCount = monthlyData.length;
               const spacing = graphWidth / barCount;
-              const barWidth = 24;
+              const barWidth = Math.min(24, Math.max(8, spacing * 0.6));
               const x = paddingLeft + idx * spacing + (spacing - barWidth) / 2;
               const barHeight = (item.rate / 100) * graphHeight;
               const y = graphHeight - barHeight;

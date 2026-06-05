@@ -99,6 +99,16 @@ export default function CalendarView({ logs, logPill, startDate, showToast }) {
     const today = new Date();
     const heatmapDays = [];
     
+    // Find the oldest date in the 365-day range (364 days ago)
+    const oldestDate = new Date();
+    oldestDate.setDate(today.getDate() - 364);
+    
+    // Pad the start so the first day aligns with its actual day of the week column (0 = Sunday, 6 = Saturday)
+    const startDayOfWeek = oldestDate.getDay();
+    for (let p = 0; p < startDayOfWeek; p++) {
+      heatmapDays.push({ level: 'empty-pad' });
+    }
+
     for (let i = 364; i >= 0; i--) {
       const d = new Date();
       d.setDate(today.getDate() - i);
@@ -125,12 +135,17 @@ export default function CalendarView({ logs, logPill, startDate, showToast }) {
 
     return (
       <div className="heatmap-container">
+        <div className="heatmap-header-days">
+          {['D', 'L', 'M', 'M', 'J', 'V', 'S'].map((d, i) => (
+            <div key={i} className="heatmap-day-label">{d}</div>
+          ))}
+        </div>
         <div className="heatmap-grid">
           {heatmapDays.map((item, idx) => (
             <div 
               key={idx}
               className={`heatmap-cell ${item.level}`}
-              title={`${item.dateStr}: ${item.level === 'taken' ? 'Tomada' : item.level === 'missed' ? 'Olvidada' : 'Sin registro'}`}
+              title={item.dateStr ? `${item.dateStr}: ${item.level === 'taken' ? 'Tomada' : item.level === 'missed' ? 'Olvidada' : 'Sin registro'}` : ''}
             />
           ))}
         </div>
@@ -301,21 +316,35 @@ export default function CalendarView({ logs, logPill, startDate, showToast }) {
           display: flex;
           flex-direction: column;
           gap: 12px;
-          overflow-x: auto;
-          padding-bottom: 8px;
+          align-items: center;
+        }
+        .heatmap-header-days {
+          display: grid;
+          grid-template-columns: repeat(7, 1fr);
+          gap: 4px;
+          width: 100%;
+          max-width: 120px;
+          text-align: center;
+        }
+        .heatmap-day-label {
+          font-size: 10px;
+          font-weight: 700;
+          color: var(--text-secondary);
         }
         .heatmap-grid {
           display: grid;
-          grid-template-rows: repeat(7, 1fr);
-          grid-auto-flow: column;
+          grid-template-columns: repeat(7, 1fr);
           gap: 4px;
-          justify-content: start;
+          width: 100%;
+          max-width: 120px;
         }
         .heatmap-cell {
-          width: 9px;
-          height: 9px;
-          border-radius: 2px;
+          aspect-ratio: 1;
+          border-radius: 3px;
           background-color: rgba(255, 255, 255, 0.05);
+        }
+        .heatmap-cell.empty-pad {
+          background-color: transparent;
         }
         .heatmap-cell.taken {
           background-color: var(--accent-cyan);
@@ -329,11 +358,12 @@ export default function CalendarView({ logs, logPill, startDate, showToast }) {
         }
         .heatmap-legend {
           display: flex;
-          justify-content: flex-end;
+          justify-content: center;
           align-items: center;
           gap: 8px;
           font-size: 11px;
           color: var(--text-secondary);
+          margin-top: 4px;
         }
         .legend-cells {
           display: flex;
