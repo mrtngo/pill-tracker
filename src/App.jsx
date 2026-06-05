@@ -15,6 +15,7 @@ export default function App() {
     startDate,
     logPill,
     updateSettings,
+    linkDevice,
     importLogs,
     resetAllData,
     currentStreak,
@@ -136,6 +137,7 @@ export default function App() {
             logs={logs}
             pillName={pillName}
             updateSettings={updateSettings}
+            linkDevice={linkDevice}
             reminderTime={reminderTime}
             startDate={startDate}
             importLogs={importLogs}

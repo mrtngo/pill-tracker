@@ -13,6 +13,7 @@ export default function SettingsView({
   logs,
   pillName,
   updateSettings,
+  linkDevice,
   reminderTime,
   startDate,
   importLogs,
@@ -28,6 +29,9 @@ export default function SettingsView({
   // Custom Messages state
   const [customMessages, setCustomMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+
+  // Device link state
+  const [linkCode, setLinkCode] = useState('');
 
   useEffect(() => {
     setNotifState(getNotificationPermissionState());
@@ -148,6 +152,21 @@ export default function SettingsView({
       console.error('Error deleting message:', err);
       showToast('Error al eliminar el mensaje');
     }
+  };
+
+  const handleCopyLinkCode = () => {
+    navigator.clipboard.writeText(deviceId);
+    showToast('Código copiado al portapapeles');
+  };
+
+  const handleLinkDeviceSubmit = (e) => {
+    e.preventDefault();
+    if (!linkCode.trim()) return;
+    if (linkCode.trim() === deviceId) {
+      showToast('Este es el código del dispositivo actual');
+      return;
+    }
+    linkDevice(linkCode);
   };
 
   const handleExportData = () => {
@@ -316,6 +335,67 @@ export default function SettingsView({
               </div>
             ))
           )}
+        </div>
+      </div>
+
+      {/* Multi-Device Synchronization & Link Panel */}
+      <div className="glass-panel">
+        <h2>Sincronización Multidispositivo</h2>
+        <p className="subtitle">Usa el mismo código en tu celular y PC para compartir tus registros, frases y ajustes</p>
+
+        <div className="sync-section" style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div className="form-group">
+            <label>Código de este dispositivo:</label>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+              <input 
+                type="text" 
+                value={deviceId} 
+                readOnly 
+                style={{ 
+                  flex: 1, 
+                  fontFamily: 'monospace', 
+                  fontSize: '12px',
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid rgba(255, 255, 255, 0.06)',
+                  borderRadius: '12px',
+                  padding: '12px',
+                  color: 'var(--text-secondary)',
+                  outline: 'none'
+                }} 
+              />
+              <button className="btn-secondary" onClick={handleCopyLinkCode} style={{ padding: '0 16px', borderRadius: '12px' }}>
+                Copiar
+              </button>
+            </div>
+          </div>
+
+          <form onSubmit={handleLinkDeviceSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <label htmlFor="link-input">Vincular a otro dispositivo (pegar código del otro):</label>
+            <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+              <input 
+                id="link-input"
+                type="text" 
+                placeholder="Ej: c4a88ade-8c0a-479e-974a-..."
+                value={linkCode}
+                onChange={(e) => setLinkCode(e.target.value)}
+                style={{ 
+                  flex: 1, 
+                  fontFamily: 'monospace', 
+                  fontSize: '12px',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid rgba(255, 255, 255, 0.08)',
+                  borderRadius: '12px',
+                  padding: '12px',
+                  color: 'var(--text-primary)',
+                  outline: 'none'
+                }}
+                required
+              />
+              <button type="submit" className="btn-primary" style={{ padding: '0 20px', borderRadius: '12px' }}>
+                Vincular
+              </button>
+            </div>
+          </form>
         </div>
       </div>
 

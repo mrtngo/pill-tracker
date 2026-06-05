@@ -152,6 +152,13 @@ export const usePillData = () => {
     syncData(logs, { pillName: name, reminderTime: time, startDate: start });
   }, [logs, syncData]);
 
+  // Link another device by copying its ID
+  const linkDevice = useCallback((newDeviceId) => {
+    if (!newDeviceId || newDeviceId.length < 10) return;
+    localStorage.setItem('aegis_device_id', newDeviceId.trim());
+    window.location.reload();
+  }, []);
+
   // Bulk set logs (for import)
   const importLogs = useCallback((newLogs, name, time, start) => {
     if (newLogs) setLogs(newLogs);
@@ -285,6 +292,7 @@ export const usePillData = () => {
     setStartDate,
     logPill,
     updateSettings,
+    linkDevice,
     importLogs,
     resetAllData,
     currentStreak,
