@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { getLocalDateString } from '../hooks/usePillData';
 
 export default function Dashboard({
+  deviceId,
   logs,
   logPill,
   pillName,
@@ -15,13 +16,35 @@ export default function Dashboard({
   
   const [timeRemaining, setTimeRemaining] = useState('');
   const [isDue, setIsDue] = useState(false);
+  const [customPhrases, setCustomPhrases] = useState([]);
   const canvasRef = useRef(null);
   const animationFrameId = useRef(null);
   const confettiParticles = useRef([]);
 
-  // List of Spanish encouragement phrases
+  // Fetch custom daily messages
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const res = await fetch(`/api/messages?deviceId=${deviceId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.messages.length > 0) {
+            setCustomPhrases(data.messages.map(m => m.message));
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching custom messages for dashboard:', err);
+      }
+    };
+
+    if (deviceId) {
+      fetchMessages();
+    }
+  }, [deviceId]);
+
+  // List of Spanish encouragement phrases (with fallback)
   const getDailyPhrase = () => {
-    const phrases = [
+    const defaultPhrases = [
       "¡Un día más cuidando de tu salud! Sigue así.",
       "La constancia es la clave para un bienestar duradero.",
       "¡Excelente trabajo! Tu dedicación de hoy es tu bienestar de mañana.",
@@ -34,12 +57,14 @@ export default function Dashboard({
       "¡Racha increíble! Cuidar de ti es el primer paso para todo."
     ];
     
+    const pool = customPhrases.length > 0 ? customPhrases : defaultPhrases;
+    
     // Hash based on current date string to get the same phrase all day, changing daily
     let hash = 0;
     for (let i = 0; i < todayStr.length; i++) {
       hash += todayStr.charCodeAt(i);
     }
-    return phrases[hash % phrases.length];
+    return pool[hash % pool.length];
   };
 
   // Calculate time remaining to reminder in Spanish

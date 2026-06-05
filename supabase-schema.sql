@@ -1,15 +1,45 @@
--- Create subscriptions table for storing PWA push subscription credentials
-CREATE TABLE IF NOT EXISTS subscriptions (
-  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  endpoint TEXT UNIQUE NOT NULL,
-  subscription_json JSONB NOT NULL,
-  reminder_time TEXT NOT NULL,          -- local time format 'HH:MM' (e.g. '21:00')
-  timezone_offset INTEGER NOT NULL,     -- new Date().getTimezoneOffset() (e.g. 300 for UTC-5)
-  pill_name TEXT NOT NULL,              -- name of the pill to include in notifications
-  last_notified_date TEXT,              -- local date format 'YYYY-MM-DD' to prevent double alerts
+-- Enable UUID extension if not enabled
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- 1. Devices / Settings table
+CREATE TABLE IF NOT EXISTS devices (
+  id UUID PRIMARY KEY,
+  pill_name TEXT NOT NULL DEFAULT 'Pastilla Diaria',
+  reminder_time TEXT NOT NULL DEFAULT '21:00',
+  start_date TEXT NOT NULL,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Enable RLS (Row Level Security) if desired, but for this simple app's service key / serverless function usage, we can write a simple schema.
--- Index for quick queries by cron job
-CREATE INDEX IF NOT EXISTS idx_subscriptions_reminder ON subscriptions (reminder_time);
+-- 2. Push Subscriptions linked to devices
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  device_id UUID NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+  endpoint TEXT UNIQUE NOT NULL,
+  subscription_json JSONB NOT NULL,
+  timezone_offset INTEGER NOT NULL,
+  last_notified_date TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- 3. Dose Logs table
+CREATE TABLE IF NOT EXISTS pill_logs (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  device_id UUID NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+  log_date TEXT NOT NULL, -- format 'YYYY-MM-DD'
+  status TEXT NOT NULL,   -- 'taken', 'skipped'
+  logged_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(device_id, log_date)
+);
+
+-- 4. Custom Messages table
+CREATE TABLE IF NOT EXISTS custom_messages (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  device_id UUID NOT NULL REFERENCES devices(id) ON DELETE CASCADE,
+  message TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Indexes for efficient queries
+CREATE INDEX IF NOT EXISTS idx_subscriptions_device ON subscriptions (device_id);
+CREATE INDEX IF NOT EXISTS idx_pill_logs_device ON pill_logs (device_id);
+CREATE INDEX IF NOT EXISTS idx_custom_messages_device ON custom_messages (device_id);

@@ -16,7 +16,23 @@ export const getDaysDifference = (startStr, endStr) => {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 };
 
+// Generate a random UUID for authentication-free device identification
+const getOrCreateDeviceId = () => {
+  let id = localStorage.getItem('aegis_device_id');
+  if (!id) {
+    id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+    localStorage.setItem('aegis_device_id', id);
+  }
+  return id;
+};
+
 export const usePillData = () => {
+  const [deviceId] = useState(() => getOrCreateDeviceId());
+  const [isSyncing, setIsSyncing] = useState(false);
+
   const [logs, setLogs] = useState(() => {
     const stored = localStorage.getItem('aegis_pill_logs');
     return stored ? JSON.parse(stored) : {};
@@ -51,6 +67,58 @@ export const usePillData = () => {
     localStorage.setItem('aegis_start_date', startDate);
   }, [startDate]);
 
+  // Cloud Sync POST helper
+  const syncData = useCallback(async (newLogs, newSettings) => {
+    try {
+      const response = await fetch('/api/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          deviceId,
+          settings: newSettings,
+          logs: newLogs
+        })
+      });
+      if (!response.ok) throw new Error('Cloud sync failed');
+    } catch (err) {
+      console.warn('Failed to sync with cloud (offline/error):', err);
+    }
+  }, [deviceId]);
+
+  // Fetch data from Supabase on startup
+  useEffect(() => {
+    const loadAndSyncData = async () => {
+      setIsSyncing(true);
+      try {
+        const res = await fetch(`/api/sync?deviceId=${deviceId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            if (data.settings) {
+              setPillName(data.settings.pillName);
+              setReminderTime(data.settings.reminderTime);
+              setStartDate(data.settings.startDate);
+            }
+            if (data.logs) {
+              setLogs((prev) => {
+                // Merge cloud and local logs (cloud takes precedence, local fills gaps)
+                return { ...prev, ...data.logs };
+              });
+            }
+          }
+        }
+      } catch (err) {
+        console.warn('Could not load cloud data on startup:', err);
+      } finally {
+        setIsSyncing(false);
+      }
+    };
+
+    loadAndSyncData();
+  }, [deviceId]);
+
   // Log pill for a specific date
   const logPill = useCallback((dateStr, status = 'taken') => {
     setLogs((prev) => {
@@ -70,9 +138,19 @@ export const usePillData = () => {
       } else {
         delete updated[dateStr];
       }
+      // Sync with cloud database
+      syncData(updated, { pillName, reminderTime, startDate });
       return updated;
     });
-  }, []);
+  }, [syncData, pillName, reminderTime, startDate]);
+
+  // Expose a clean way to update settings and sync to cloud
+  const updateSettings = useCallback((name, time, start) => {
+    setPillName(name);
+    setReminderTime(time);
+    setStartDate(start);
+    syncData(logs, { pillName: name, reminderTime: time, startDate: start });
+  }, [logs, syncData]);
 
   // Bulk set logs (for import)
   const importLogs = useCallback((newLogs, name, time, start) => {
@@ -80,7 +158,13 @@ export const usePillData = () => {
     if (name) setPillName(name);
     if (time) setReminderTime(time);
     if (start) setStartDate(start);
-  }, []);
+    // Sync all imported data to cloud
+    syncData(newLogs || logs, {
+      pillName: name || pillName,
+      reminderTime: time || reminderTime,
+      startDate: start || startDate
+    });
+  }, [logs, pillName, reminderTime, startDate, syncData]);
 
   // Clear all data
   const resetAllData = useCallback(() => {
@@ -89,7 +173,13 @@ export const usePillData = () => {
     setReminderTime('21:00');
     setStartDate(getLocalDateString());
     localStorage.removeItem('aegis_last_notified_date');
-  }, []);
+    // Delete in database by syncing empty states
+    syncData({}, {
+      pillName: 'Pastilla Diaria',
+      reminderTime: '21:00',
+      startDate: getLocalDateString()
+    });
+  }, [syncData]);
 
   // Calculate streaks
   const calculateStreaks = useCallback(() => {
@@ -129,7 +219,6 @@ export const usePillData = () => {
     }
 
     // Longest streak calculation
-    // Sort ascending (oldest first) to scan forwards
     const sortedAsc = Object.keys(logs)
       .filter((date) => logs[date]?.taken)
       .sort((a, b) => new Date(a) - new Date(b));
@@ -171,8 +260,6 @@ export const usePillData = () => {
     const takenCount = logsArray.filter(l => l.taken).length;
     const skippedCount = logsArray.filter(l => l.status === 'skipped').length;
     
-    // Compliance = taken / total elapsed days since start (capped by current date)
-    // If today is day 1, totalDays = 1.
     const complianceRate = totalDays > 0 ? Math.round((takenCount / totalDays) * 100) : 100;
 
     return {
@@ -187,6 +274,8 @@ export const usePillData = () => {
   const stats = getStats();
 
   return {
+    deviceId,
+    isSyncing,
     logs,
     pillName,
     setPillName,
@@ -195,6 +284,7 @@ export const usePillData = () => {
     startDate,
     setStartDate,
     logPill,
+    updateSettings,
     importLogs,
     resetAllData,
     currentStreak,

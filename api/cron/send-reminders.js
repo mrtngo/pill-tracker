@@ -1,9 +1,10 @@
+/* global process */
 import { createClient } from '@supabase/supabase-js';
 import webpush from 'web-push';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-const publicVapidKey = process.env.VITE_PUBLIC_VAPID_KEY || 'BHS4IqZrtQSFlBUE4IHEp7HR1YeOHa2iTUtP9RUjP_r1Ygb0SeChVvHhufqvPnmdzdnH6GxUttALSXKBICbDyN8';
+const publicVapidKey = process.env.VITE_PUBLIC_VAPID_KEY || 'BAbD5S06itsvdmjLjk4UNZPwsXFng-Favy705z2wHxVTfQWqSRQn3xuec7MYvxkQWWlVzDBgLHgY6NXKIrD3GNs';
 const privateVapidKey = process.env.PRIVATE_VAPID_KEY;
 
 // Configure web-push with VAPID details
@@ -27,10 +28,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 2. Fetch all active subscriptions
+    // 2. Fetch all active subscriptions joined with their device settings
     const { data: subscriptions, error } = await supabase
       .from('subscriptions')
-      .select('*');
+      .select('*, devices(pill_name, reminder_time)');
 
     if (error) {
       throw error;
@@ -49,9 +50,15 @@ export default async function handler(req, res) {
 
     // 3. Filter and send notifications to due subscribers
     for (const sub of subscriptions) {
+      const device = sub.devices;
+      if (!device) {
+        console.warn(`No device settings found for subscription ${sub.id}. Skipping.`);
+        continue;
+      }
+
       const timezoneOffset = sub.timezone_offset; // e.g. 300 minutes for UTC-5
-      const reminderTime = sub.reminder_time; // 'HH:MM'
-      const pillName = sub.pill_name;
+      const reminderTime = device.reminder_time; // 'HH:MM'
+      const pillName = device.pill_name;
 
       // Calculate subscriber's current local minutes of the day (0 to 1439)
       const localTotalMinutes = (utcTotalMinutes - timezoneOffset + 1440) % 1440;
@@ -74,6 +81,29 @@ export default async function handler(req, res) {
       const hasNotifiedToday = sub.last_notified_date === localDateStr;
 
       if (isTimeDue && !hasNotifiedToday) {
+        // 4. Double check if they already took their pill today
+        const { data: logEntry, error: logError } = await supabase
+          .from('pill_logs')
+          .select('status')
+          .eq('device_id', sub.device_id)
+          .eq('log_date', localDateStr)
+          .maybeSingle();
+
+        if (logError) {
+          console.error(`Error querying pill logs for device ${sub.device_id}:`, logError);
+        }
+
+        const hasTakenToday = logEntry && logEntry.status === 'taken';
+
+        if (hasTakenToday) {
+          // If they already took it, mark it as "notified today" so we don't check again
+          await supabase
+            .from('subscriptions')
+            .update({ last_notified_date: localDateStr })
+            .eq('id', sub.id);
+          continue;
+        }
+
         const payload = JSON.stringify({
           title: `¡Hora de tu ${pillName}!`,
           body: `No olvides registrar tu dosis de hoy. Toca para registrar.`

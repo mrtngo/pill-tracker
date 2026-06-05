@@ -1,3 +1,4 @@
+/* global process */
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.SUPABASE_URL;
@@ -29,22 +30,38 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
 
-  const { subscription, reminderTime, timezoneOffset, pillName } = req.body;
+  const { deviceId, subscription, reminderTime, timezoneOffset, pillName, startDate } = req.body;
 
-  if (!subscription || !subscription.endpoint || !reminderTime || timezoneOffset === undefined || !pillName) {
+  if (!deviceId || !subscription || !subscription.endpoint || !reminderTime || timezoneOffset === undefined || !pillName) {
     return res.status(400).json({ error: 'Missing required parameters' });
   }
 
   try {
+    // 1. Ensure the device settings exist in the devices table
+    const { error: deviceError } = await supabase
+      .from('devices')
+      .upsert(
+        {
+          id: deviceId,
+          pill_name: pillName,
+          reminder_time: reminderTime,
+          start_date: startDate || new Date().toISOString().split('T')[0]
+        }
+      );
+
+    if (deviceError) {
+      throw deviceError;
+    }
+
+    // 2. Upsert the push subscription linked to the deviceId
     const { data, error } = await supabase
       .from('subscriptions')
       .upsert(
         {
+          device_id: deviceId,
           endpoint: subscription.endpoint,
           subscription_json: subscription,
-          reminder_time: reminderTime,
-          timezone_offset: timezoneOffset,
-          pill_name: pillName
+          timezone_offset: timezoneOffset
         },
         { onConflict: 'endpoint' }
       )

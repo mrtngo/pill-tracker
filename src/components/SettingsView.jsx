@@ -9,13 +9,12 @@ import {
 import { getLocalDateString } from '../hooks/usePillData';
 
 export default function SettingsView({
+  deviceId,
   logs,
   pillName,
-  setPillName,
+  updateSettings,
   reminderTime,
-  setReminderTime,
   startDate,
-  setStartDate,
   importLogs,
   resetAllData,
   showToast
@@ -26,20 +25,43 @@ export default function SettingsView({
   const [notifState, setNotifState] = useState('default');
   const [showConfirmReset, setShowConfirmReset] = useState(false);
 
+  // Custom Messages state
+  const [customMessages, setCustomMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+
   useEffect(() => {
     setNotifState(getNotificationPermissionState());
   }, []);
 
+  // Fetch custom messages on load
+  useEffect(() => {
+    const fetchMessages = async () => {
+      try {
+        const res = await fetch(`/api/messages?deviceId=${deviceId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success) {
+            setCustomMessages(data.messages);
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching custom messages:', err);
+      }
+    };
+
+    if (deviceId) {
+      fetchMessages();
+    }
+  }, [deviceId]);
+
   const handleSaveSettings = async (e) => {
     e.preventDefault();
-    setPillName(tempName);
-    setReminderTime(tempTime);
-    setStartDate(tempStart);
+    updateSettings(tempName, tempTime, tempStart);
     showToast('Ajustes guardados correctamente');
     
     if (getNotificationPermissionState() === 'granted') {
       // Sync the settings with the push backend
-      await subscribeToPushNotifications(tempTime, tempName);
+      await subscribeToPushNotifications(deviceId, tempTime, tempName);
     }
   };
 
@@ -56,7 +78,7 @@ export default function SettingsView({
       showToast('¡Notificaciones activadas!');
       sendNotification('Notificaciones Activas', 'Recibirás un aviso diario a la hora configurada.');
       // Register with the push backend
-      await subscribeToPushNotifications(reminderTime, pillName);
+      await subscribeToPushNotifications(deviceId, reminderTime, pillName);
     } else if (state === 'denied') {
       showToast('Notificaciones bloqueadas. Actívalas en los ajustes del navegador.');
     }
@@ -69,6 +91,62 @@ export default function SettingsView({
     );
     if (!sent) {
       showToast('No se pudo enviar la notificación. Verifica los permisos.');
+    }
+  };
+
+  const handleAddMessage = async (e) => {
+    e.preventDefault();
+    if (!newMessage.trim()) return;
+
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          deviceId,
+          message: newMessage.trim()
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setCustomMessages((prev) => [...prev, data.message]);
+          setNewMessage('');
+          showToast('Frase motivacional guardada');
+        }
+      }
+    } catch (err) {
+      console.error('Error adding message:', err);
+      showToast('Error al guardar el mensaje');
+    }
+  };
+
+  const handleDeleteMessage = async (id) => {
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          deviceId,
+          id
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setCustomMessages((prev) => prev.filter((msg) => msg.id !== id));
+          showToast('Frase eliminada');
+        }
+      }
+    } catch (err) {
+      console.error('Error deleting message:', err);
+      showToast('Error al eliminar el mensaje');
     }
   };
 
@@ -185,6 +263,60 @@ export default function SettingsView({
             Guardar Cambios
           </button>
         </form>
+      </div>
+
+      {/* Custom Encouragement Messages Panel */}
+      <div className="glass-panel">
+        <h2>Mensajes Diarios Personalizados</h2>
+        <p className="subtitle">Agrega tus propias frases para inspirarte al registrar tu dosis</p>
+        
+        <form onSubmit={handleAddMessage} style={{ display: 'flex', gap: '8px', marginBottom: '16px' }}>
+          <input 
+            type="text" 
+            placeholder="Ej: ¡Vamos por un día más de salud! 🌟" 
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            style={{ 
+              flex: 1,
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '12px',
+              padding: '12px',
+              color: 'var(--text-primary)',
+              fontFamily: 'inherit',
+              fontSize: '14px',
+              outline: 'none'
+            }}
+            required
+          />
+          <button type="submit" className="btn-primary" style={{ minWidth: '90px' }}>
+            Agregar
+          </button>
+        </form>
+
+        <div className="custom-messages-list">
+          {customMessages.length === 0 ? (
+            <p className="subtitle" style={{ fontStyle: 'italic', textAlign: 'center', margin: '12px 0' }}>
+              Aún no has agregado frases personalizadas.
+            </p>
+          ) : (
+            customMessages.map((msg) => (
+              <div key={msg.id} className="message-item">
+                <span className="msg-text">"{msg.message}"</span>
+                <button 
+                  className="delete-msg-btn"
+                  onClick={() => handleDeleteMessage(msg.id)}
+                  aria-label="Eliminar mensaje"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              </div>
+            ))
+          )}
+        </div>
       </div>
 
       {/* Notifications Management Panel */}
@@ -350,6 +482,45 @@ export default function SettingsView({
           padding: 16px;
           font-size: 13px;
           color: var(--text-primary);
+        }
+
+        .custom-messages-list {
+          max-height: 250px;
+          overflow-y: auto;
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+        .message-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: rgba(255, 255, 255, 0.02);
+          border: 1px solid rgba(255, 255, 255, 0.05);
+          border-radius: 12px;
+          padding: 10px 14px;
+          font-size: 13.5px;
+        }
+        .msg-text {
+          font-style: italic;
+          color: var(--text-primary);
+          line-height: 1.4;
+        }
+        .delete-msg-btn {
+          background: transparent;
+          border: none;
+          color: var(--danger);
+          opacity: 0.7;
+          cursor: pointer;
+          padding: 4px;
+          display: flex;
+          align-items: center;
+          border-radius: 6px;
+          transition: all 0.2s ease;
+        }
+        .delete-msg-btn:hover {
+          opacity: 1;
+          background: rgba(239, 68, 68, 0.1);
         }
       `}</style>
     </div>

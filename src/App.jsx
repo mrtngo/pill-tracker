@@ -8,14 +8,13 @@ import SettingsView from './components/SettingsView';
 
 export default function App() {
   const {
+    deviceId,
     logs,
     pillName,
-    setPillName,
     reminderTime,
-    setReminderTime,
     startDate,
-    setStartDate,
     logPill,
+    updateSettings,
     importLogs,
     resetAllData,
     currentStreak,
@@ -81,6 +80,7 @@ export default function App() {
       case 'dashboard':
         return (
           <Dashboard
+            deviceId={deviceId}
             logs={logs}
             logPill={logPill}
             pillName={pillName}
@@ -112,13 +112,12 @@ export default function App() {
       case 'settings':
         return (
           <SettingsView
+            deviceId={deviceId}
             logs={logs}
             pillName={pillName}
-            setPillName={setPillName}
+            updateSettings={updateSettings}
             reminderTime={reminderTime}
-            setReminderTime={setReminderTime}
             startDate={startDate}
-            setStartDate={setStartDate}
             importLogs={importLogs}
             resetAllData={resetAllData}
             showToast={showToast}

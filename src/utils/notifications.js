@@ -117,7 +117,7 @@ export const startReminderCheck = (reminderTimeStr, logs, pillName) => {
   };
 };
 
-const PUBLIC_VAPID_KEY = import.meta.env.VITE_PUBLIC_VAPID_KEY || 'BHS4IqZrtQSFlBUE4IHEp7HR1YeOHa2iTUtP9RUjP_r1Ygb0SeChVvHhufqvPnmdzdnH6GxUttALSXKBICbDyN8';
+const PUBLIC_VAPID_KEY = import.meta.env.VITE_PUBLIC_VAPID_KEY || 'BAbD5S06itsvdmjLjk4UNZPwsXFng-Favy705z2wHxVTfQWqSRQn3xuec7MYvxkQWWlVzDBgLHgY6NXKIrD3GNs';
 
 const urlBase64ToUint8Array = (base64String) => {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
@@ -134,7 +134,7 @@ const urlBase64ToUint8Array = (base64String) => {
   return outputArray;
 };
 
-export const subscribeToPushNotifications = async (reminderTime, pillName) => {
+export const subscribeToPushNotifications = async (deviceId, reminderTime, pillName) => {
   if (!isNotificationSupported()) {
     console.warn('Push notifications not supported on this device.');
     return null;
@@ -163,6 +163,7 @@ export const subscribeToPushNotifications = async (reminderTime, pillName) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        deviceId,
         subscription,
         reminderTime,
         timezoneOffset: new Date().getTimezoneOffset(),
