@@ -1,13 +1,19 @@
 import React from 'react';
 import { getLocalDateString } from '../hooks/usePillData';
 
+// Parse YYYY-MM-DD date string into a local Date object safely to prevent timezone shifting
+const parseLocalDate = (dateStr) => {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
+};
+
 export default function StatsView({ logs, startDate, currentStreak, longestStreak, stats }) {
   
   // Calculate compliance since start date (forced Spanish locale)
   const getMonthlyComplianceData = () => {
     const data = [];
     const today = new Date();
-    const start = new Date(startDate);
+    const start = parseLocalDate(startDate);
     
     const startYear = start.getFullYear();
     const startMonth = start.getMonth();
@@ -35,7 +41,7 @@ export default function StatsView({ logs, startDate, currentStreak, longestStrea
         const checkDate = new Date(year, month, day);
         const checkDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
         
-        const isAfterStart = checkDate >= new Date(startDate);
+        const isAfterStart = checkDate >= start;
         const isBeforeToday = checkDate <= today;
 
         if (isAfterStart && isBeforeToday) {
@@ -62,7 +68,7 @@ export default function StatsView({ logs, startDate, currentStreak, longestStrea
   const getMilestoneData = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const start = new Date(startDate);
+    const start = parseLocalDate(startDate);
     start.setHours(0, 0, 0, 0);
 
     // 2-Year milestone (Baby Planning)
