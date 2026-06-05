@@ -13,7 +13,7 @@ export const getDaysDifference = (startStr, endStr) => {
   const start = new Date(startStr);
   const end = new Date(endStr);
   const diffTime = Math.abs(end - start);
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+  return Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1;
 };
 
 // Use a single static UUID because this is a dedicated single-user app
@@ -83,8 +83,10 @@ export const usePillData = () => {
         })
       });
       if (!response.ok) throw new Error('Cloud sync failed');
+      return true;
     } catch (err) {
       console.warn('Failed to sync with cloud (offline/error):', err);
+      throw err;
     }
   }, [deviceId]);
 
@@ -97,7 +99,29 @@ export const usePillData = () => {
         if (res.ok) {
           const data = await res.json();
           if (data.success) {
-            if (data.settings) {
+            const isDirty = localStorage.getItem('aegis_settings_dirty') === 'true';
+            
+            // Read local settings from localStorage as the source of truth if dirty
+            const localPillName = localStorage.getItem('aegis_pill_name') || 'Pastilla Diaria';
+            const localReminderTime = localStorage.getItem('aegis_reminder_time') || '21:00';
+            const localStartDate = localStorage.getItem('aegis_start_date') || getLocalDateString();
+            const localTheme = localStorage.getItem('aegis_theme') || 'cyan';
+
+            let currentLogs = {};
+            // Load local logs first
+            const storedLogs = localStorage.getItem('aegis_pill_logs');
+            if (storedLogs) {
+              currentLogs = JSON.parse(storedLogs);
+            }
+
+            if (data.logs) {
+              // Merge cloud and local logs (local fills gaps, cloud takes precedence)
+              const mergedLogs = { ...currentLogs, ...data.logs };
+              setLogs(mergedLogs);
+              currentLogs = mergedLogs;
+            }
+
+            if (data.settings && !isDirty) {
               setPillName(data.settings.pillName);
               setReminderTime(data.settings.reminderTime);
               setStartDate(data.settings.startDate);
@@ -105,11 +129,31 @@ export const usePillData = () => {
                 setTheme(data.settings.theme);
               }
             }
-            if (data.logs) {
-              setLogs((prev) => {
-                // Merge cloud and local logs (cloud takes precedence, local fills gaps)
-                return { ...prev, ...data.logs };
-              });
+
+            // Check if there are any local logs that are not synced to the cloud yet
+            const hasNewLogsToUpload = data.logs ? Object.keys(currentLogs).some(date => {
+              return !data.logs[date] || data.logs[date].status !== currentLogs[date].status;
+            }) : Object.keys(currentLogs).length > 0;
+
+            if (isDirty || hasNewLogsToUpload) {
+              const settingsToSync = isDirty ? {
+                pillName: localPillName,
+                reminderTime: localReminderTime,
+                startDate: localStartDate,
+                theme: localTheme
+              } : {
+                pillName: data.settings?.pillName || localPillName,
+                reminderTime: data.settings?.reminderTime || localReminderTime,
+                startDate: data.settings?.startDate || localStartDate,
+                theme: data.settings?.theme || localTheme
+              };
+
+              try {
+                await syncData(currentLogs, settingsToSync);
+                localStorage.removeItem('aegis_settings_dirty');
+              } catch (syncErr) {
+                console.warn('Failed to sync merged local state on startup:', syncErr);
+              }
             }
           }
         }
@@ -121,7 +165,7 @@ export const usePillData = () => {
     };
 
     loadAndSyncData();
-  }, [deviceId]);
+  }, [deviceId, syncData]);
 
   // Log pill for a specific date
   const logPill = useCallback((dateStr, status = 'taken') => {
@@ -153,12 +197,28 @@ export const usePillData = () => {
     setPillName(name);
     setReminderTime(time);
     setStartDate(start);
-    syncData(logs, { pillName: name, reminderTime: time, startDate: start, theme });
+    localStorage.setItem('aegis_settings_dirty', 'true');
+    
+    syncData(logs, { pillName: name, reminderTime: time, startDate: start, theme })
+      .then(() => {
+        localStorage.removeItem('aegis_settings_dirty');
+      })
+      .catch((err) => {
+        console.warn('Failed to sync settings, marked as dirty:', err);
+      });
   }, [logs, syncData, theme]);
 
   const changeTheme = useCallback((newTheme) => {
     setTheme(newTheme);
-    syncData(logs, { pillName, reminderTime, startDate, theme: newTheme });
+    localStorage.setItem('aegis_settings_dirty', 'true');
+    
+    syncData(logs, { pillName, reminderTime, startDate, theme: newTheme })
+      .then(() => {
+        localStorage.removeItem('aegis_settings_dirty');
+      })
+      .catch((err) => {
+        console.warn('Failed to sync theme, marked as dirty:', err);
+      });
   }, [logs, pillName, reminderTime, startDate, syncData]);
 
 
