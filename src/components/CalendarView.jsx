@@ -135,13 +135,13 @@ export default function CalendarView({ logs, logPill, startDate, showToast }) {
           ))}
         </div>
         <div className="heatmap-legend">
-          <span>Menos adherencia</span>
+          <span>Menor constancia</span>
           <div className="legend-cells">
             <div className="heatmap-cell before-start" />
             <div className="heatmap-cell missed" />
             <div className="heatmap-cell taken" />
           </div>
-          <span>Más adherencia</span>
+          <span>Mayor constancia</span>
         </div>
       </div>
     );
@@ -189,8 +189,8 @@ export default function CalendarView({ logs, logPill, startDate, showToast }) {
 
       {/* Year Heatmap Contribution Card */}
       <div className="glass-panel">
-        <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>Mapa de Cumplimiento Anual</h2>
-        <p className="subtitle" style={{ marginBottom: '16px' }}>Visualización de tu adherencia en los últimos 12 meses</p>
+        <h2 style={{ fontSize: '16px', fontWeight: '600', marginBottom: '8px' }}>Mapa de Constancia Anual</h2>
+        <p className="subtitle" style={{ marginBottom: '16px' }}>Visualización de tu constancia en los últimos 12 meses</p>
         {renderYearHeatmap()}
       </div>
 

@@ -85,7 +85,7 @@ export default function StatsView({ logs, startDate, currentStreak, longestStrea
         dateStr: end10Yr.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' }),
         remaining: remainingDays10Yr,
         pct: pct10Yr,
-        label: 'Meta de 10 Años: Tratamiento Completo 🛡️'
+        label: 'Meta de 10 Años: Ritual Completo 🛡️'
       }
     };
   };
@@ -107,7 +107,7 @@ export default function StatsView({ logs, startDate, currentStreak, longestStrea
       <div className="stats-large-grid">
         <div className="glass-panel stat-big-card">
           <div className="stat-num glow-teal">{stats.complianceRate}%</div>
-          <div className="stat-lbl">Adherencia General</div>
+          <div className="stat-lbl">Constancia General</div>
         </div>
         <div className="glass-panel stat-big-card">
           <div className="stat-num glow-amber">{longestStreak}</div>
@@ -117,8 +117,8 @@ export default function StatsView({ logs, startDate, currentStreak, longestStrea
 
       {/* Milestones Card */}
       <div className="glass-panel">
-        <h2>Metas del Tratamiento</h2>
-        <p className="subtitle">Cronología del tratamiento y objetivos clave</p>
+        <h2>Metas de mi Ritual</h2>
+        <p className="subtitle">Cronología de tu ritual y objetivos clave</p>
         
         <div className="milestones-container">
           {/* 2-Year Milestone */}
@@ -159,7 +159,7 @@ export default function StatsView({ logs, startDate, currentStreak, longestStrea
 
       {/* Detail Grid */}
       <div className="glass-panel">
-        <h2>Resumen del Tratamiento</h2>
+        <h2>Resumen de mi Ritual</h2>
         <p className="subtitle">Desglose de registros desde la fecha de inicio ({startDate})</p>
 
         <div className="stats-rows">
@@ -184,8 +184,8 @@ export default function StatsView({ logs, startDate, currentStreak, longestStrea
 
       {/* SVG Bar Chart Card */}
       <div className="glass-panel">
-        <h2>Cumplimiento Mensual</h2>
-        <p className="subtitle">Porcentaje de adherencia en los últimos 6 meses</p>
+        <h2>Constancia Mensual</h2>
+        <p className="subtitle">Porcentaje de tomas en los últimos 6 meses</p>
 
         <div className="chart-wrapper">
           <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="svg-bar-chart">

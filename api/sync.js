@@ -61,7 +61,8 @@ export default async function handler(req, res) {
       const settings = device ? {
         pillName: device.pill_name,
         reminderTime: device.reminder_time,
-        startDate: device.start_date
+        startDate: device.start_date,
+        theme: device.theme || 'cyan'
       } : null;
 
       return res.status(200).json({ success: true, settings, logs });
@@ -97,7 +98,8 @@ export default async function handler(req, res) {
             id: deviceId,
             pill_name: settings ? settings.pillName : 'Pastilla Diaria',
             reminder_time: settings ? settings.reminderTime : '21:00',
-            start_date: settings ? settings.startDate : new Date().toISOString().split('T')[0]
+            start_date: settings ? settings.startDate : new Date().toISOString().split('T')[0],
+            theme: settings ? (settings.theme || 'cyan') : 'cyan'
           });
         if (insertDevError) throw insertDevError;
       }
@@ -110,7 +112,8 @@ export default async function handler(req, res) {
             id: deviceId,
             pill_name: settings.pillName,
             reminder_time: settings.reminderTime,
-            start_date: settings.startDate
+            start_date: settings.startDate,
+            theme: settings.theme || 'cyan'
           });
 
         if (settingsErr) throw settingsErr;

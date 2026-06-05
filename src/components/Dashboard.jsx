@@ -225,7 +225,7 @@ export default function Dashboard({
 
         <h2>Estado Diario</h2>
         <p className="subtitle" style={{ marginBottom: '12px' }}>
-          Tratamiento: <strong>{pillName}</strong>
+          Rutina: <strong>{pillName}</strong>
         </p>
 
         <div className="pill-action-container">
@@ -292,7 +292,7 @@ export default function Dashboard({
           </div>
           <div>
             <div className="val">{stats.complianceRate}%</div>
-            <div className="lbl">Tasa de Adherencia</div>
+            <div className="lbl">Constancia</div>
           </div>
         </div>
       </div>

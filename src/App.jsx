@@ -13,6 +13,8 @@ export default function App() {
     pillName,
     reminderTime,
     startDate,
+    theme,
+    changeTheme,
     logPill,
     updateSettings,
     importLogs,
@@ -138,6 +140,8 @@ export default function App() {
             updateSettings={updateSettings}
             reminderTime={reminderTime}
             startDate={startDate}
+            theme={theme}
+            changeTheme={changeTheme}
             importLogs={importLogs}
             resetAllData={resetAllData}
             showToast={showToast}
@@ -176,7 +180,7 @@ export default function App() {
           <span className="brand-name">ChuchiTracker</span>
         </div>
         <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>
-          Tratamiento
+          Mi Ritual
         </div>
       </header>
 

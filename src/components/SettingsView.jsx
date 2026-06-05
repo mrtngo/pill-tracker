@@ -15,6 +15,8 @@ export default function SettingsView({
   updateSettings,
   reminderTime,
   startDate,
+  theme,
+  changeTheme,
   importLogs,
   resetAllData,
   showToast
@@ -158,6 +160,7 @@ export default function SettingsView({
         pillName,
         reminderTime,
         startDate,
+        theme,
         logs
       };
 
@@ -193,7 +196,8 @@ export default function SettingsView({
           json.logs,
           json.pillName || 'Pastilla Diaria',
           json.reminderTime || '21:00',
-          json.startDate || getLocalDateString()
+          json.startDate || getLocalDateString(),
+          json.theme || 'cyan'
         );
 
         setTempName(json.pillName || 'Pastilla Diaria');
@@ -223,10 +227,10 @@ export default function SettingsView({
       
       {/* Configuration Form Panel */}
       <div className="glass-panel">
-        <h2>Preferencias del Tratamiento</h2>
+        <h2>Preferencias de mi Ritual</h2>
         <form onSubmit={handleSaveSettings} className="settings-form">
           <div className="form-group">
-            <label htmlFor="pill-name">Nombre de la Pastilla / Tratamiento</label>
+            <label htmlFor="pill-name">¿Qué pastilla o hábito registras?</label>
             <input 
               id="pill-name" 
               type="text" 
@@ -248,7 +252,7 @@ export default function SettingsView({
               />
             </div>
             <div className="form-group">
-              <label htmlFor="start-date">Fecha de Inicio del Tratamiento</label>
+              <label htmlFor="start-date">Fecha de Inicio de esta Rutina</label>
               <input 
                 id="start-date" 
                 type="date" 
@@ -263,6 +267,36 @@ export default function SettingsView({
             Guardar Cambios
           </button>
         </form>
+      </div>
+
+      {/* Theme Selector Panel */}
+      <div className="glass-panel">
+        <h2>Personalizar Aspecto</h2>
+        <p className="subtitle">Elige el ambiente de color que mejor se adapte a tu día</p>
+        
+        <div className="theme-selector-grid">
+          {[
+            { id: 'cyan', name: 'Turquesa', color: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
+            { id: 'amber', name: 'Atardecer', color: 'linear-gradient(135deg, #ff6b6b 0%, #ff9f43 100%)' },
+            { id: 'rose', name: 'Cerezo', color: 'linear-gradient(135deg, #ff85a1 0%, #ff758f 100%)' },
+            { id: 'lavender', name: 'Ensueño', color: 'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)' },
+            { id: 'sage', name: 'Bosque', color: 'linear-gradient(135deg, #059669 0%, #34d399 100%)' }
+          ].map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              className={`theme-option-btn ${theme === t.id ? 'active' : ''}`}
+              onClick={() => {
+                changeTheme(t.id);
+                showToast(`Tema ${t.name} aplicado`);
+              }}
+              aria-label={`Cambiar tema a ${t.name}`}
+            >
+              <div className="theme-color-circle" style={{ background: t.color }} />
+              <span className="theme-name-lbl">{t.name}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Custom Encouragement Messages Panel */}
@@ -354,7 +388,7 @@ export default function SettingsView({
       {/* Data Operations Panel */}
       <div className="glass-panel">
         <h2>Operaciones de Datos</h2>
-        <p className="subtitle">Resguarda o restaura tus registros para el seguimiento de 10 años</p>
+        <p className="subtitle">Resguarda o restaura tus registros para tu ritual de 10 años</p>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           <button className="btn-secondary" onClick={handleExportData} style={{ justifyContent: 'start' }}>

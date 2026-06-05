@@ -479,3 +479,117 @@ p.subtitle {
     gap: 12px;
   }
 }
+
+/* Cozy Ambient Themes styling */
+
+/* Sunset Theme */
+body.theme-amber {
+  --accent-cyan: #ff9f43;
+  --accent-violet: #ee5253;
+  --accent-blue: #ff6b6b;
+  --accent-gradient: linear-gradient(135deg, #ff6b6b 0%, #ff9f43 100%);
+  --accent-gradient-glow: rgba(255, 159, 67, 0.3);
+  --panel-border-glow: rgba(255, 159, 67, 0.12);
+  --bg-gradient: radial-gradient(circle at 50% 0%, #291a10 0%, #0c0805 100%);
+  --bg-color: #0c0805;
+  --panel-bg: rgba(36, 24, 16, 0.5);
+}
+
+/* Rose Theme */
+body.theme-rose {
+  --accent-cyan: #ff758f;
+  --accent-violet: #c9184a;
+  --accent-blue: #ffb3c1;
+  --accent-gradient: linear-gradient(135deg, #ff85a1 0%, #ff758f 100%);
+  --accent-gradient-glow: rgba(255, 117, 143, 0.3);
+  --panel-border-glow: rgba(255, 117, 143, 0.12);
+  --bg-gradient: radial-gradient(circle at 50% 0%, #28141a 0%, #0f0709 100%);
+  --bg-color: #0f0709;
+  --panel-bg: rgba(38, 20, 26, 0.5);
+}
+
+/* Lavender Theme */
+body.theme-lavender {
+  --accent-cyan: #a78bfa;
+  --accent-violet: #6d28d9;
+  --accent-blue: #c4b5fd;
+  --accent-gradient: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+  --accent-gradient-glow: rgba(167, 139, 250, 0.3);
+  --panel-border-glow: rgba(167, 139, 250, 0.12);
+  --bg-gradient: radial-gradient(circle at 50% 0%, #1e1b4b 0%, #09090b 100%);
+  --bg-color: #09090b;
+  --panel-bg: rgba(30, 27, 75, 0.45);
+}
+
+/* Sage Theme */
+body.theme-sage {
+  --accent-cyan: #34d399;
+  --accent-violet: #065f46;
+  --accent-blue: #6ee7b7;
+  --accent-gradient: linear-gradient(135deg, #059669 0%, #34d399 100%);
+  --accent-gradient-glow: rgba(52, 211, 153, 0.3);
+  --panel-border-glow: rgba(52, 211, 153, 0.12);
+  --bg-gradient: radial-gradient(circle at 50% 0%, #064e3b 0%, #022c22 100%);
+  --bg-color: #022c22;
+  --panel-bg: rgba(6, 78, 59, 0.45);
+}
+
+/* Theme Selector UI styles */
+.theme-selector-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.theme-option-btn {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 12px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-secondary);
+  outline: none;
+}
+
+.theme-option-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
+}
+
+.theme-option-btn.active {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--accent-cyan);
+  color: var(--text-primary);
+  box-shadow: 0 0 12px var(--panel-border-glow);
+}
+
+.theme-color-circle {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  transition: transform 0.2s ease;
+}
+
+.theme-option-btn:hover .theme-color-circle {
+  transform: scale(1.1);
+}
+
+.theme-option-btn.active .theme-color-circle {
+  border-color: #fff;
+  transform: scale(1.1);
+  box-shadow: 0 0 10px var(--accent-gradient-glow);
+}
+
+.theme-name-lbl {
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+}
+
