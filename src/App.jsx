@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePillData, getLocalDateString } from './hooks/usePillData';
-import { startReminderCheck } from './utils/notifications';
+import { startReminderCheck, subscribeToPushNotifications } from './utils/notifications';
 import Dashboard from './components/Dashboard';
 import CalendarView from './components/CalendarView';
 import StatsView from './components/StatsView';
@@ -67,6 +67,26 @@ export default function App() {
       };
     }
   }, [logPill, pillName]);
+
+  // Auto-sync push subscription if local timezone offset changes (e.g. user travels)
+  useEffect(() => {
+    const syncTimezone = async () => {
+      if ('serviceWorker' in navigator && Notification.permission === 'granted') {
+        const currentOffset = new Date().getTimezoneOffset();
+        const lastSyncedOffset = localStorage.getItem('aegis_last_synced_offset');
+        
+        if (lastSyncedOffset !== String(currentOffset)) {
+          const success = await subscribeToPushNotifications(deviceId, reminderTime, pillName);
+          if (success) {
+            localStorage.setItem('aegis_last_synced_offset', String(currentOffset));
+          }
+        }
+      }
+    };
+    
+    const timer = setTimeout(syncTimezone, 3000);
+    return () => clearTimeout(timer);
+  }, [deviceId, reminderTime, pillName]);
 
   useEffect(() => {
     const stopChecking = startReminderCheck(reminderTime, logs, pillName);
