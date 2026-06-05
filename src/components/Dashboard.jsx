@@ -442,6 +442,26 @@ export default function Dashboard({
               </div>
             </div>
           </div>
+
+          {/* Notification Reminder Notice */}
+          <div style={{ 
+            marginTop: '22px',
+            padding: '12px 16px',
+            background: 'rgba(0, 242, 254, 0.05)',
+            border: '1px dashed rgba(0, 242, 254, 0.2)',
+            borderRadius: '16px',
+            display: 'flex',
+            gap: '12px',
+            alignItems: 'flex-start'
+          }}>
+            <span style={{ fontSize: '18px' }}>🔔</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', textAlign: 'left' }}>
+              <strong style={{ fontSize: '13px', color: 'var(--accent-cyan)', fontWeight: '600' }}>Importante: Activa las notificaciones</strong>
+              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                Una vez abierta desde la pantalla de inicio, ve a la sección de <strong>Ajustes</strong> y pulsa en <strong>"Activar Avisos"</strong> para recibir tus avisos diarios.
+              </p>
+            </div>
+          </div>
         </div>
       )}
 
