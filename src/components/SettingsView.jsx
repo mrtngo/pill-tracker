@@ -17,6 +17,7 @@ export default function SettingsView({
   startDate,
   theme,
   changeTheme,
+  pushMessage,
   importLogs,
   resetAllData,
   showToast
@@ -24,8 +25,13 @@ export default function SettingsView({
   const [tempName, setTempName] = useState(pillName);
   const [tempTime, setTempTime] = useState(reminderTime);
   const [tempStart, setTempStart] = useState(startDate);
+  const [tempPushMsg, setTempPushMsg] = useState(pushMessage);
   const [notifState, setNotifState] = useState('default');
   const [showConfirmReset, setShowConfirmReset] = useState(false);
+
+  useEffect(() => {
+    setTempPushMsg(pushMessage);
+  }, [pushMessage]);
 
   // Custom Messages state
   const [customMessages, setCustomMessages] = useState([]);
@@ -58,7 +64,7 @@ export default function SettingsView({
 
   const handleSaveSettings = async (e) => {
     e.preventDefault();
-    updateSettings(tempName, tempTime, tempStart);
+    updateSettings(tempName, tempTime, tempStart, tempPushMsg);
     showToast('Ajustes guardados correctamente');
     
     if (getNotificationPermissionState() === 'granted') {
@@ -161,6 +167,7 @@ export default function SettingsView({
         reminderTime,
         startDate,
         theme,
+        pushMessage,
         logs
       };
 
@@ -197,12 +204,14 @@ export default function SettingsView({
           json.pillName || 'Pastilla Diaria',
           json.reminderTime || '21:00',
           json.startDate || getLocalDateString(),
-          json.theme || 'cyan'
+          json.theme || 'cyan',
+          json.pushMessage || 'No olvides registrar tu hábito de hoy. Toca para registrar.'
         );
 
         setTempName(json.pillName || 'Pastilla Diaria');
         setTempTime(json.reminderTime || '21:00');
         setTempStart(json.startDate || getLocalDateString());
+        setTempPushMsg(json.pushMessage || 'No olvides registrar tu hábito de hoy. Toca para registrar.');
 
         showToast('¡Datos restaurados con éxito!');
       } catch (err) {
@@ -218,6 +227,7 @@ export default function SettingsView({
     setTempName('Pastilla Diaria');
     setTempTime('21:00');
     setTempStart(getLocalDateString());
+    setTempPushMsg('No olvides registrar tu hábito de hoy. Toca para registrar.');
     setShowConfirmReset(false);
     showToast('Los datos de la aplicación han sido borrados');
   };
@@ -261,6 +271,18 @@ export default function SettingsView({
                 required
               />
             </div>
+          </div>
+
+          <div className="form-group" style={{ marginTop: '8px', marginBottom: '8px' }}>
+            <label htmlFor="push-message">Mensaje del Recordatorio (Aviso Push)</label>
+            <input 
+              id="push-message" 
+              type="text" 
+              value={tempPushMsg} 
+              onChange={(e) => setTempPushMsg(e.target.value)}
+              placeholder="Ej: No olvides registrar tu hábito de hoy. Toca para registrar."
+              required
+            />
           </div>
 
           <button type="submit" className="btn-primary" style={{ width: '100%', marginTop: '10px' }}>

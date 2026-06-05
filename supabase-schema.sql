@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS devices (
   pill_name TEXT NOT NULL DEFAULT 'Pastilla Diaria',
   reminder_time TEXT NOT NULL DEFAULT '21:00',
   start_date TEXT NOT NULL,
+  theme TEXT NOT NULL DEFAULT 'cyan',
+  push_message TEXT NOT NULL DEFAULT 'No olvides registrar tu hábito de hoy. Toca para registrar.',
   created_at TIMESTAMPTZ DEFAULT now()
 );
 

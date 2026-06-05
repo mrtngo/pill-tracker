@@ -62,7 +62,8 @@ export default async function handler(req, res) {
         pillName: device.pill_name,
         reminderTime: device.reminder_time,
         startDate: device.start_date,
-        theme: device.theme || 'cyan'
+        theme: device.theme || 'cyan',
+        pushMessage: device.push_message || 'No olvides registrar tu hábito de hoy. Toca para registrar.'
       } : null;
 
       return res.status(200).json({ success: true, settings, logs });
@@ -99,7 +100,8 @@ export default async function handler(req, res) {
             pill_name: settings ? settings.pillName : 'Pastilla Diaria',
             reminder_time: settings ? settings.reminderTime : '21:00',
             start_date: settings ? settings.startDate : new Date().toISOString().split('T')[0],
-            theme: settings ? (settings.theme || 'cyan') : 'cyan'
+            theme: settings ? (settings.theme || 'cyan') : 'cyan',
+            push_message: settings ? (settings.pushMessage || 'No olvides registrar tu hábito de hoy. Toca para registrar.') : 'No olvides registrar tu hábito de hoy. Toca para registrar.'
           });
         if (insertDevError) throw insertDevError;
       }
@@ -113,7 +115,8 @@ export default async function handler(req, res) {
             pill_name: settings.pillName,
             reminder_time: settings.reminderTime,
             start_date: settings.startDate,
-            theme: settings.theme || 'cyan'
+            theme: settings.theme || 'cyan',
+            push_message: settings.pushMessage || 'No olvides registrar tu hábito de hoy. Toca para registrar.'
           });
 
         if (settingsErr) throw settingsErr;

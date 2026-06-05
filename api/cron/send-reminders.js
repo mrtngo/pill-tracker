@@ -31,7 +31,7 @@ export default async function handler(req, res) {
     // 2. Fetch all active subscriptions joined with their device settings
     const { data: subscriptions, error } = await supabase
       .from('subscriptions')
-      .select('*, devices(pill_name, reminder_time)');
+      .select('*, devices(pill_name, reminder_time, push_message)');
 
     if (error) {
       throw error;
@@ -104,9 +104,11 @@ export default async function handler(req, res) {
           continue;
         }
 
+        const pushMessage = device.push_message || 'No olvides registrar tu hábito de hoy. Toca para registrar.';
+
         const payload = JSON.stringify({
           title: `¡Hora de tu ${pillName}!`,
-          body: `No olvides registrar tu dosis de hoy. Toca para registrar.`
+          body: pushMessage
         });
 
         try {

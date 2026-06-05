@@ -15,6 +15,7 @@ export default function App() {
     startDate,
     theme,
     changeTheme,
+    pushMessage,
     logPill,
     updateSettings,
     importLogs,
@@ -142,6 +143,7 @@ export default function App() {
             startDate={startDate}
             theme={theme}
             changeTheme={changeTheme}
+            pushMessage={pushMessage}
             importLogs={importLogs}
             resetAllData={resetAllData}
             showToast={showToast}

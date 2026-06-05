@@ -44,6 +44,10 @@ export const usePillData = () => {
     return localStorage.getItem('aegis_theme') || 'cyan';
   });
 
+  const [pushMessage, setPushMessage] = useState(() => {
+    return localStorage.getItem('aegis_push_message') || 'No olvides registrar tu hábito de hoy. Toca para registrar.';
+  });
+
   // Sync state to localstorage
   useEffect(() => {
     localStorage.setItem('aegis_pill_logs', JSON.stringify(logs));
@@ -60,6 +64,10 @@ export const usePillData = () => {
   useEffect(() => {
     localStorage.setItem('aegis_start_date', startDate);
   }, [startDate]);
+
+  useEffect(() => {
+    localStorage.setItem('aegis_push_message', pushMessage);
+  }, [pushMessage]);
 
   useEffect(() => {
     localStorage.setItem('aegis_theme', theme);
@@ -106,6 +114,7 @@ export const usePillData = () => {
             const localReminderTime = localStorage.getItem('aegis_reminder_time') || '21:00';
             const localStartDate = localStorage.getItem('aegis_start_date') || getLocalDateString();
             const localTheme = localStorage.getItem('aegis_theme') || 'cyan';
+            const localPushMessage = localStorage.getItem('aegis_push_message') || 'No olvides registrar tu hábito de hoy. Toca para registrar.';
 
             let currentLogs = {};
             // Load local logs first
@@ -128,6 +137,9 @@ export const usePillData = () => {
               if (data.settings.theme) {
                 setTheme(data.settings.theme);
               }
+              if (data.settings.pushMessage) {
+                setPushMessage(data.settings.pushMessage);
+              }
             }
 
             // Check if there are any local logs that are not synced to the cloud yet
@@ -140,12 +152,14 @@ export const usePillData = () => {
                 pillName: localPillName,
                 reminderTime: localReminderTime,
                 startDate: localStartDate,
-                theme: localTheme
+                theme: localTheme,
+                pushMessage: localPushMessage
               } : {
                 pillName: data.settings?.pillName || localPillName,
                 reminderTime: data.settings?.reminderTime || localReminderTime,
                 startDate: data.settings?.startDate || localStartDate,
-                theme: data.settings?.theme || localTheme
+                theme: data.settings?.theme || localTheme,
+                pushMessage: data.settings?.pushMessage || localPushMessage
               };
 
               try {
@@ -187,19 +201,20 @@ export const usePillData = () => {
         delete updated[dateStr];
       }
       // Sync with cloud database
-      syncData(updated, { pillName, reminderTime, startDate, theme });
+      syncData(updated, { pillName, reminderTime, startDate, theme, pushMessage });
       return updated;
     });
-  }, [syncData, pillName, reminderTime, startDate, theme]);
+  }, [syncData, pillName, reminderTime, startDate, theme, pushMessage]);
 
   // Expose a clean way to update settings and sync to cloud
-  const updateSettings = useCallback((name, time, start) => {
+  const updateSettings = useCallback((name, time, start, newPushMsg) => {
     setPillName(name);
     setReminderTime(time);
     setStartDate(start);
+    setPushMessage(newPushMsg);
     localStorage.setItem('aegis_settings_dirty', 'true');
     
-    syncData(logs, { pillName: name, reminderTime: time, startDate: start, theme })
+    syncData(logs, { pillName: name, reminderTime: time, startDate: start, theme, pushMessage: newPushMsg })
       .then(() => {
         localStorage.removeItem('aegis_settings_dirty');
       })
@@ -212,32 +227,34 @@ export const usePillData = () => {
     setTheme(newTheme);
     localStorage.setItem('aegis_settings_dirty', 'true');
     
-    syncData(logs, { pillName, reminderTime, startDate, theme: newTheme })
+    syncData(logs, { pillName, reminderTime, startDate, theme: newTheme, pushMessage })
       .then(() => {
         localStorage.removeItem('aegis_settings_dirty');
       })
       .catch((err) => {
         console.warn('Failed to sync theme, marked as dirty:', err);
       });
-  }, [logs, pillName, reminderTime, startDate, syncData]);
+  }, [logs, pillName, reminderTime, startDate, pushMessage, syncData]);
 
 
 
   // Bulk set logs (for import)
-  const importLogs = useCallback((newLogs, name, time, start, newTheme) => {
+  const importLogs = useCallback((newLogs, name, time, start, newTheme, newPushMsg) => {
     if (newLogs) setLogs(newLogs);
     if (name) setPillName(name);
     if (time) setReminderTime(time);
     if (start) setStartDate(start);
     if (newTheme) setTheme(newTheme);
+    if (newPushMsg) setPushMessage(newPushMsg);
     // Sync all imported data to cloud
     syncData(newLogs || logs, {
       pillName: name || pillName,
       reminderTime: time || reminderTime,
       startDate: start || startDate,
-      theme: newTheme || theme
+      theme: newTheme || theme,
+      pushMessage: newPushMsg || pushMessage
     });
-  }, [logs, pillName, reminderTime, startDate, theme, syncData]);
+  }, [logs, pillName, reminderTime, startDate, theme, pushMessage, syncData]);
 
   // Clear all data
   const resetAllData = useCallback(() => {
@@ -246,13 +263,15 @@ export const usePillData = () => {
     setReminderTime('21:00');
     setStartDate(getLocalDateString());
     setTheme('cyan');
+    setPushMessage('No olvides registrar tu hábito de hoy. Toca para registrar.');
     localStorage.removeItem('aegis_last_notified_date');
     // Delete in database by syncing empty states
     syncData({}, {
       pillName: 'Pastilla Diaria',
       reminderTime: '21:00',
       startDate: getLocalDateString(),
-      theme: 'cyan'
+      theme: 'cyan',
+      pushMessage: 'No olvides registrar tu hábito de hoy. Toca para registrar.'
     });
   }, [syncData]);
 
@@ -360,6 +379,7 @@ export const usePillData = () => {
     setStartDate,
     theme,
     changeTheme,
+    pushMessage,
     logPill,
     updateSettings,
     importLogs,
