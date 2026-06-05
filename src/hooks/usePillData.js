@@ -1,11 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 
-// Get YYYY-MM-DD representation of a local Date object
 export const getLocalDateString = (date = new Date()) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+};
+
+// Parse YYYY-MM-DD date string into a local Date object safely to prevent timezone shifting
+export const parseLocalDate = (dateStr) => {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(year, month - 1, day);
 };
 
 // Calculate dates between two date strings (inclusive)
@@ -300,12 +305,13 @@ export const usePillData = () => {
     const hasYesterday = logs[yesterdayStr]?.taken;
 
     if (hasToday || hasYesterday) {
-      let checkDate = new Date(hasToday ? todayStr : yesterdayStr);
+      let checkStr = hasToday ? todayStr : yesterdayStr;
       while (!isCurrentBroken) {
-        const checkStr = getLocalDateString(checkDate);
         if (logs[checkStr]?.taken) {
           currentStreak++;
+          const checkDate = parseLocalDate(checkStr);
           checkDate.setDate(checkDate.getDate() - 1);
+          checkStr = getLocalDateString(checkDate);
         } else {
           isCurrentBroken = true;
         }
@@ -322,7 +328,7 @@ export const usePillData = () => {
     let previousDate = null;
 
     for (const dateStr of sortedAsc) {
-      const currentDate = new Date(dateStr);
+      const currentDate = parseLocalDate(dateStr);
       if (previousDate === null) {
         tempStreak = 1;
       } else {

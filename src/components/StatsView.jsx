@@ -198,6 +198,12 @@ export default function StatsView({ logs, startDate, currentStreak, longestStrea
 
         <div className="chart-wrapper">
           <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="svg-bar-chart">
+            <defs>
+              <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="var(--accent-cyan)" />
+                <stop offset="100%" stopColor="var(--accent-cyan)" stopOpacity="0.2" />
+              </linearGradient>
+            </defs>
             {/* Grid lines */}
             {[0, 25, 50, 75, 100].map((level) => {
               const y = graphHeight - (level / 100) * graphHeight;
@@ -411,8 +417,8 @@ export default function StatsView({ logs, startDate, currentStreak, longestStrea
           cursor: pointer;
         }
         .chart-bar-group:hover .chart-bar {
-          fill: #00f2fe;
-          filter: drop-shadow(0 0 4px rgba(0, 242, 254, 0.5));
+          fill: var(--accent-cyan);
+          filter: drop-shadow(0 0 4px var(--accent-gradient-glow));
         }
         .bar-value-label {
           opacity: 0;
@@ -422,15 +428,6 @@ export default function StatsView({ logs, startDate, currentStreak, longestStrea
           opacity: 1;
         }
       `}</style>
-
-      <svg width="0" height="0" style={{ position: 'absolute' }}>
-        <defs>
-          <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#00f2fe" />
-            <stop offset="100%" stopColor="rgba(79, 172, 254, 0.2)" />
-          </linearGradient>
-        </defs>
-      </svg>
     </div>
   );
 }
