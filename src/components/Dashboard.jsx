@@ -17,9 +17,15 @@ export default function Dashboard({
   const [timeRemaining, setTimeRemaining] = useState('');
   const [isDue, setIsDue] = useState(false);
   const [customPhrases, setCustomPhrases] = useState([]);
+  const [isStandalone, setIsStandalone] = useState(true);
   const canvasRef = useRef(null);
   const animationFrameId = useRef(null);
   const confettiParticles = useRef([]);
+
+  useEffect(() => {
+    const checkStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    setIsStandalone(!!checkStandalone);
+  }, []);
 
   // Fetch custom daily messages
   useEffect(() => {
@@ -315,6 +321,146 @@ export default function Dashboard({
           </button>
         </div>
       </div>
+      {/* Install App Guide (only shown when not running as standalone PWA) */}
+      {!isStandalone && (
+        <div className="glass-panel install-guide-panel" style={{ marginTop: '20px' }}>
+          <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>📲</span> Cómo instalar en tu iPhone
+          </h2>
+          <p className="subtitle" style={{ marginBottom: '22px', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+            Para poder recibir recordatorios diarios y abrir la aplicación a pantalla completa, añádela a tu pantalla de inicio siguiendo estos pasos:
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', position: 'relative' }}>
+            {/* Step 1 */}
+            <div style={{ display: 'flex', gap: '16px', position: 'relative' }}>
+              <div style={{
+                background: 'var(--accent-gradient)',
+                color: '#fff',
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: '700',
+                fontSize: '14px',
+                boxShadow: '0 0 10px var(--accent-gradient-glow)',
+                flexShrink: 0,
+                zIndex: 2
+              }}>1</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <h4 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>Abre en Safari</h4>
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                  Asegúrate de estar visitando esta página usando el navegador <strong style={{ color: 'var(--accent-cyan)' }}>Safari</strong> de Apple.
+                </p>
+              </div>
+            </div>
+            
+            {/* Vertical connector line */}
+            <div style={{
+              position: 'absolute',
+              left: '15px',
+              top: '32px',
+              bottom: '32px',
+              width: '2px',
+              background: 'linear-gradient(to bottom, var(--accent-cyan), rgba(0, 242, 254, 0.1))',
+              zIndex: 1
+            }} />
+
+            {/* Step 2 */}
+            <div style={{ display: 'flex', gap: '16px', position: 'relative' }}>
+              <div style={{
+                background: 'var(--accent-gradient)',
+                color: '#fff',
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: '700',
+                fontSize: '14px',
+                boxShadow: '0 0 10px var(--accent-gradient-glow)',
+                flexShrink: 0,
+                zIndex: 2
+              }}>2</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <h4 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>Toca "Compartir"</h4>
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '4px' }}>
+                  Presiona el botón de compartir
+                  <span style={{ 
+                    display: 'inline-flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center',
+                    background: 'rgba(255, 255, 255, 0.08)', 
+                    padding: '4px 6px', 
+                    borderRadius: '6px', 
+                    color: 'var(--text-primary)'
+                  }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: 'block' }}>
+                      <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                      <polyline points="16 6 12 2 8 6" />
+                      <line x1="12" y1="2" x2="12" y2="15" />
+                    </svg>
+                  </span>
+                  en la barra de navegación de Safari.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 3 */}
+            <div style={{ display: 'flex', gap: '16px', position: 'relative' }}>
+              <div style={{
+                background: 'var(--accent-gradient)',
+                color: '#fff',
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: '700',
+                fontSize: '14px',
+                boxShadow: '0 0 10px var(--accent-gradient-glow)',
+                flexShrink: 0,
+                zIndex: 2
+              }}>3</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <h4 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>Añadir a pantalla de inicio</h4>
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                  Desplázate hacia abajo en la lista de opciones y selecciona <strong style={{ color: '#fff' }}>"Añadir a pantalla de inicio"</strong>.
+                </p>
+              </div>
+            </div>
+
+            {/* Step 4 */}
+            <div style={{ display: 'flex', gap: '16px', position: 'relative' }}>
+              <div style={{
+                background: 'var(--accent-gradient)',
+                color: '#fff',
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: '700',
+                fontSize: '14px',
+                boxShadow: '0 0 10px var(--accent-gradient-glow)',
+                flexShrink: 0,
+                zIndex: 2
+              }}>4</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                <h4 style={{ fontSize: '14px', fontWeight: '600', color: 'var(--text-primary)' }}>Confirma la acción</h4>
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                  Pulsa <strong style={{ color: 'var(--accent-cyan)' }}>"Añadir"</strong> en la parte superior derecha. ¡Y listo! Accede a la app desde tu pantalla.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <style>{`
         .status-pill {
