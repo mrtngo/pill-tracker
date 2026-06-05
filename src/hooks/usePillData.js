@@ -16,18 +16,8 @@ export const getDaysDifference = (startStr, endStr) => {
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
 };
 
-// Generate a random UUID for authentication-free device identification
-const getOrCreateDeviceId = () => {
-  let id = localStorage.getItem('aegis_device_id');
-  if (!id) {
-    id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-      const r = Math.random() * 16 | 0, v = c === 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
-    localStorage.setItem('aegis_device_id', id);
-  }
-  return id;
-};
+// Use a single static UUID because this is a dedicated single-user app
+const getOrCreateDeviceId = () => '00000000-0000-0000-0000-000000000000';
 
 export const usePillData = () => {
   const [deviceId] = useState(() => getOrCreateDeviceId());
@@ -152,12 +142,7 @@ export const usePillData = () => {
     syncData(logs, { pillName: name, reminderTime: time, startDate: start });
   }, [logs, syncData]);
 
-  // Link another device by copying its ID
-  const linkDevice = useCallback((newDeviceId) => {
-    if (!newDeviceId || newDeviceId.length < 10) return;
-    localStorage.setItem('aegis_device_id', newDeviceId.trim());
-    window.location.reload();
-  }, []);
+
 
   // Bulk set logs (for import)
   const importLogs = useCallback((newLogs, name, time, start) => {
@@ -292,7 +277,6 @@ export const usePillData = () => {
     setStartDate,
     logPill,
     updateSettings,
-    linkDevice,
     importLogs,
     resetAllData,
     currentStreak,
