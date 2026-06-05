@@ -80,7 +80,29 @@ export default async function handler(req, res) {
     }
 
     try {
-      // 1. Sync settings if provided
+      // 1. Ensure the device exists in the devices table
+      const { data: device, error: devError } = await supabase
+        .from('devices')
+        .select('id')
+        .eq('id', deviceId)
+        .maybeSingle();
+
+      if (devError) throw devError;
+
+      if (!device) {
+        // Create default device settings if not present
+        const { error: insertDevError } = await supabase
+          .from('devices')
+          .insert({
+            id: deviceId,
+            pill_name: settings ? settings.pillName : 'Pastilla Diaria',
+            reminder_time: settings ? settings.reminderTime : '21:00',
+            start_date: settings ? settings.startDate : new Date().toISOString().split('T')[0]
+          });
+        if (insertDevError) throw insertDevError;
+      }
+
+      // 2. Sync settings if provided (will overwrite the default above)
       if (settings) {
         const { error: settingsErr } = await supabase
           .from('devices')
