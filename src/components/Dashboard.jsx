@@ -9,7 +9,8 @@ export default function Dashboard({
   reminderTime,
   currentStreak,
   stats,
-  showToast
+  showToast,
+  promptMood
 }) {
   const todayStr = getLocalDateString();
   const isTakenToday = !!logs[todayStr]?.taken;
@@ -18,6 +19,11 @@ export default function Dashboard({
   const [isDue, setIsDue] = useState(false);
   const [customPhrases, setCustomPhrases] = useState([]);
   const [isStandalone, setIsStandalone] = useState(true);
+
+  const todayLog = logs[todayStr];
+  const todayMood = todayLog?.status && todayLog.status.includes(':') 
+    ? todayLog.status.split(':')[1] 
+    : '';
   const canvasRef = useRef(null);
   const animationFrameId = useRef(null);
   const confettiParticles = useRef([]);
@@ -191,9 +197,12 @@ export default function Dashboard({
       logPill(todayStr, 'none');
       showToast('Registro de hoy eliminado');
     } else {
-      logPill(todayStr, 'taken');
-      showToast('¡Toma registrada! Excelente trabajo.');
-      setTimeout(triggerConfetti, 50);
+      promptMood(todayStr, (mood) => {
+        const statusVal = mood ? `taken:${mood}` : 'taken';
+        logPill(todayStr, statusVal);
+        showToast('¡Toma registrada! Excelente trabajo.');
+        setTimeout(triggerConfetti, 50);
+      });
     }
   };
 
@@ -246,7 +255,7 @@ export default function Dashboard({
               <path d="M7.5 10.5L16.5 14.5" strokeLinecap="round"/>
             </svg>
             <span className="pill-status-label">
-              {isTakenToday ? 'Tomada' : 'Registrar'}
+              {isTakenToday ? `Tomada ${todayMood}` : 'Registrar'}
             </span>
           </button>
 

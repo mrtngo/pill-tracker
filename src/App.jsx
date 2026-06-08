@@ -27,9 +27,14 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [toast, setToast] = useState({ message: '', visible: false });
+  const [moodModal, setMoodModal] = useState({ visible: false, dateStr: '', onSelect: null });
 
   const showToast = (message) => {
     setToast({ message, visible: true });
+  };
+
+  const promptMood = (dateStr, onSelect) => {
+    setMoodModal({ visible: true, dateStr, onSelect });
   };
 
   useEffect(() => {
@@ -111,6 +116,7 @@ export default function App() {
             currentStreak={currentStreak}
             stats={stats}
             showToast={showToast}
+            promptMood={promptMood}
           />
         );
       case 'calendar':
@@ -120,6 +126,7 @@ export default function App() {
             logPill={logPill}
             startDate={startDate}
             showToast={showToast}
+            promptMood={promptMood}
           />
         );
       case 'stats':
@@ -246,6 +253,44 @@ export default function App() {
           Ajustes
         </button>
       </nav>
+
+      {/* Mood Selector Modal Overlay */}
+      {moodModal.visible && (
+        <div className="mood-modal-overlay">
+          <div className="mood-modal-card glass-panel glow">
+            <h3>¿Cómo te sientes hoy?</h3>
+            <p className="subtitle" style={{ marginBottom: '20px' }}>Selecciona tu humor o síntoma al tomar la dosis</p>
+            
+            <div className="mood-grid">
+              <button className="mood-option-btn" onClick={() => { moodModal.onSelect('😊'); setMoodModal({ visible: false, dateStr: '', onSelect: null }); }}>
+                <span className="mood-emoji">😊</span>
+                <span className="mood-lbl-text">Alegre / Bien</span>
+              </button>
+              <button className="mood-option-btn" onClick={() => { moodModal.onSelect('😐'); setMoodModal({ visible: false, dateStr: '', onSelect: null }); }}>
+                <span className="mood-emoji">😐</span>
+                <span className="mood-lbl-text">Neutral</span>
+              </button>
+              <button className="mood-option-btn" onClick={() => { moodModal.onSelect('😴'); setMoodModal({ visible: false, dateStr: '', onSelect: null }); }}>
+                <span className="mood-emoji">😴</span>
+                <span className="mood-lbl-text">Cansado</span>
+              </button>
+              <button className="mood-option-btn" onClick={() => { moodModal.onSelect('🤢'); setMoodModal({ visible: false, dateStr: '', onSelect: null }); }}>
+                <span className="mood-emoji">🤢</span>
+                <span className="mood-lbl-text">Náusea / Mal</span>
+              </button>
+            </div>
+
+            <div className="mood-modal-actions">
+              <button className="mood-action-btn skip" onClick={() => { moodModal.onSelect(''); setMoodModal({ visible: false, dateStr: '', onSelect: null }); }}>
+                Omitir humor
+              </button>
+              <button className="mood-action-btn cancel" onClick={() => setMoodModal({ visible: false, dateStr: '', onSelect: null })}>
+                Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );

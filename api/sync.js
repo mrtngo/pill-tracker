@@ -51,7 +51,7 @@ export default async function handler(req, res) {
       if (logsData) {
         logsData.forEach((row) => {
           logs[row.log_date] = {
-            taken: row.status === 'taken',
+            taken: row.status ? row.status.startsWith('taken') : false,
             status: row.status,
             timestamp: new Date(row.logged_at).getTime()
           };
@@ -129,7 +129,7 @@ export default async function handler(req, res) {
         const activeDates = [];
 
         Object.entries(logs).forEach(([dateStr, logInfo]) => {
-          if (logInfo && (logInfo.status === 'taken' || logInfo.status === 'skipped')) {
+          if (logInfo && logInfo.status && (logInfo.status.startsWith('taken') || logInfo.status === 'skipped')) {
             logRows.push({
               device_id: deviceId,
               log_date: dateStr,

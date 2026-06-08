@@ -190,11 +190,11 @@ export const usePillData = () => {
   const logPill = useCallback((dateStr, status = 'taken') => {
     setLogs((prev) => {
       const updated = { ...prev };
-      if (status === 'taken') {
+      if (status && status.startsWith('taken')) {
         updated[dateStr] = {
           taken: true,
           timestamp: Date.now(),
-          status: 'taken'
+          status: status
         };
       } else if (status === 'skipped') {
         updated[dateStr] = {

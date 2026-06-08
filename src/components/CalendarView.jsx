@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { getLocalDateString, getDaysDifference } from '../hooks/usePillData';
 
-export default function CalendarView({ logs, logPill, startDate, showToast }) {
+export default function CalendarView({ logs, logPill, startDate, showToast, promptMood }) {
   const now = new Date();
   const [currentYear, setCurrentYear] = useState(now.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(now.getMonth());
@@ -74,6 +74,16 @@ export default function CalendarView({ logs, logPill, startDate, showToast }) {
     return 'missed';
   };
 
+  const getDayMood = (day) => {
+    if (!day) return '';
+    const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const log = logs[dateStr];
+    if (log?.status && log.status.includes(':')) {
+      return log.status.split(':')[1];
+    }
+    return '';
+  };
+
   const handleDateClick = (day) => {
     if (!day) return;
     
@@ -90,8 +100,12 @@ export default function CalendarView({ logs, logPill, startDate, showToast }) {
       logPill(dateStr, 'none');
       showToast(`Toma eliminada para el ${day} de ${monthNames[currentMonth]}`);
     } else {
-      logPill(dateStr, 'taken');
-      showToast(`Toma registrada para el ${day} de ${monthNames[currentMonth]}`);
+      promptMood(dateStr, (mood) => {
+        const statusVal = mood ? `taken:${mood}` : 'taken';
+        logPill(dateStr, statusVal);
+        const dayVal = parseInt(dateStr.split('-')[2], 10);
+        showToast(`Toma registrada para el ${dayVal} de ${monthNames[currentMonth]}`);
+      });
     }
   };
 
@@ -187,6 +201,7 @@ export default function CalendarView({ logs, logPill, startDate, showToast }) {
           
           {daysArray.map((day, idx) => {
             const status = getDayStatus(day);
+            const mood = getDayMood(day);
             return (
               <button
                 key={idx}
@@ -195,6 +210,7 @@ export default function CalendarView({ logs, logPill, startDate, showToast }) {
                 onClick={() => handleDateClick(day)}
               >
                 {day}
+                {mood && <span className="cell-mood-emoji">{mood}</span>}
                 {day && <span className={`cell-indicator ${status}`} />}
               </button>
             );
@@ -368,6 +384,13 @@ export default function CalendarView({ logs, logPill, startDate, showToast }) {
         .legend-cells {
           display: flex;
           gap: 4px;
+        }
+        .cell-mood-emoji {
+          position: absolute;
+          top: 4px;
+          right: 4px;
+          font-size: 11px;
+          line-height: 1;
         }
       `}</style>
     </div>
