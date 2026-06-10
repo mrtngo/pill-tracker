@@ -117,6 +117,7 @@ export default function App() {
             stats={stats}
             showToast={showToast}
             promptMood={promptMood}
+            theme={theme}
           />
         );
       case 'calendar':

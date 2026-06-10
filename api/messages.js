@@ -1,5 +1,6 @@
 /* global process */
 import { createClient } from '@supabase/supabase-js';
+import { logRequest } from './_utils/logger.js';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -19,6 +20,9 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
+
+  // Log the request
+  await logRequest(req, '/api/messages');
 
   // GET: Fetch custom daily messages
   if (req.method === 'GET') {

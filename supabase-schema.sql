@@ -45,3 +45,26 @@ CREATE TABLE IF NOT EXISTS custom_messages (
 CREATE INDEX IF NOT EXISTS idx_subscriptions_device ON subscriptions (device_id);
 CREATE INDEX IF NOT EXISTS idx_pill_logs_device ON pill_logs (device_id);
 CREATE INDEX IF NOT EXISTS idx_custom_messages_device ON custom_messages (device_id);
+
+-- 5. Request Logs table
+CREATE TABLE IF NOT EXISTS request_logs (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  device_id UUID REFERENCES devices(id) ON DELETE SET NULL,
+  endpoint TEXT NOT NULL,
+  method TEXT NOT NULL,
+  ip TEXT,
+  user_agent TEXT,
+  device_type TEXT,
+  os_name TEXT,
+  browser_name TEXT,
+  country TEXT,
+  region TEXT,
+  city TEXT,
+  latitude TEXT,
+  longitude TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_request_logs_device ON request_logs (device_id);
+CREATE INDEX IF NOT EXISTS idx_request_logs_created_at ON request_logs (created_at);
+

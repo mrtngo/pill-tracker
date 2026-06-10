@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getLocalDateString } from '../hooks/usePillData';
+import CozyGarden from './CozyGarden';
 
 export default function Dashboard({
   deviceId,
@@ -10,7 +11,8 @@ export default function Dashboard({
   currentStreak,
   stats,
   showToast,
-  promptMood
+  promptMood,
+  theme
 }) {
   const todayStr = getLocalDateString();
   const isTakenToday = !!logs[todayStr]?.taken;
@@ -269,6 +271,14 @@ export default function Dashboard({
           </div>
         </div>
       </div>
+
+      {/* Cozy Garden Component */}
+      <CozyGarden 
+        currentStreak={currentStreak} 
+        isTakenToday={isTakenToday} 
+        logs={logs}
+        theme={theme} 
+      />
 
       {/* Daily Motivation Card */}
       <div className="glass-panel motivation-card">
