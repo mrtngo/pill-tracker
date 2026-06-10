@@ -1,4 +1,5 @@
 import { getLocalDateString } from '../hooks/usePillData';
+import { isPWA } from './pwa';
 
 export const isNotificationSupported = () => {
   return 'Notification' in window && 'serviceWorker' in navigator;
@@ -167,7 +168,8 @@ export const subscribeToPushNotifications = async (deviceId, reminderTime, pillN
         subscription,
         reminderTime,
         timezoneOffset: new Date().getTimezoneOffset(),
-        pillName
+        pillName,
+        pwa: isPWA()
       })
     });
 

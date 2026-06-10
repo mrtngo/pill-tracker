@@ -75,6 +75,14 @@ export async function logRequest(req, endpoint, customDeviceId = null) {
       }
     }
 
+    // Determine isPwa
+    let isPwa = false;
+    if (req.query && req.query.pwa === 'true') {
+      isPwa = true;
+    } else if (req.body && req.body.pwa === true) {
+      isPwa = true;
+    }
+
     // Validate UUID format before inserting to avoid Postgres UUID cast errors
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (deviceId && !uuidRegex.test(deviceId)) {
@@ -95,7 +103,8 @@ export async function logRequest(req, endpoint, customDeviceId = null) {
       region,
       city,
       latitude,
-      longitude
+      longitude,
+      is_pwa: isPwa
     });
 
     if (error) {

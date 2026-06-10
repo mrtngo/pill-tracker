@@ -7,6 +7,7 @@ import {
   subscribeToPushNotifications
 } from '../utils/notifications';
 import { getLocalDateString } from '../hooks/usePillData';
+import { isPWA } from '../utils/pwa';
 
 export default function SettingsView({
   deviceId,
@@ -45,7 +46,7 @@ export default function SettingsView({
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await fetch(`/api/messages?deviceId=${deviceId}`);
+        const res = await fetch(`/api/messages?deviceId=${deviceId}&pwa=${isPWA()}`);
         if (res.ok) {
           const data = await res.json();
           if (data.success) {
@@ -114,7 +115,8 @@ export default function SettingsView({
         },
         body: JSON.stringify({
           deviceId,
-          message: newMessage.trim()
+          message: newMessage.trim(),
+          pwa: isPWA()
         })
       });
 
@@ -141,7 +143,8 @@ export default function SettingsView({
         },
         body: JSON.stringify({
           deviceId,
-          id
+          id,
+          pwa: isPWA()
         })
       });
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getLocalDateString } from '../hooks/usePillData';
 import CozyGarden from './CozyGarden';
+import { isPWA } from '../utils/pwa';
 
 export default function Dashboard({
   deviceId,
@@ -39,7 +40,7 @@ export default function Dashboard({
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await fetch(`/api/messages?deviceId=${deviceId}`);
+        const res = await fetch(`/api/messages?deviceId=${deviceId}&pwa=${isPWA()}`);
         if (res.ok) {
           const data = await res.json();
           if (data.success && data.messages.length > 0) {

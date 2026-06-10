@@ -62,6 +62,7 @@ CREATE TABLE IF NOT EXISTS request_logs (
   city TEXT,
   latitude TEXT,
   longitude TEXT,
+  is_pwa BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 

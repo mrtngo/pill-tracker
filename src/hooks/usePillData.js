@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { isPWA } from '../utils/pwa';
 
 export const getLocalDateString = (date = new Date()) => {
   const year = date.getFullYear();
@@ -92,7 +93,8 @@ export const usePillData = () => {
         body: JSON.stringify({
           deviceId,
           settings: newSettings,
-          logs: newLogs
+          logs: newLogs,
+          pwa: isPWA()
         })
       });
       if (!response.ok) throw new Error('Cloud sync failed');
@@ -108,7 +110,7 @@ export const usePillData = () => {
     const loadAndSyncData = async () => {
       setIsSyncing(true);
       try {
-        const res = await fetch(`/api/sync?deviceId=${deviceId}`);
+        const res = await fetch(`/api/sync?deviceId=${deviceId}&pwa=${isPWA()}`);
         if (res.ok) {
           const data = await res.json();
           if (data.success) {
