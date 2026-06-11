@@ -5,6 +5,7 @@ import { isPWA } from '../utils/pwa';
 
 export default function Dashboard({
   deviceId,
+  clientId,
   logs,
   logPill,
   pillName,
@@ -40,7 +41,7 @@ export default function Dashboard({
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await fetch(`/api/messages?deviceId=${deviceId}&pwa=${isPWA()}`);
+        const res = await fetch(`/api/messages?deviceId=${deviceId}&clientId=${clientId}&pwa=${isPWA()}`);
         if (res.ok) {
           const data = await res.json();
           if (data.success && data.messages.length > 0) {
@@ -55,7 +56,7 @@ export default function Dashboard({
     if (deviceId) {
       fetchMessages();
     }
-  }, [deviceId]);
+  }, [deviceId, clientId]);
 
   // List of Spanish encouragement phrases (with fallback)
   const getDailyPhrase = () => {

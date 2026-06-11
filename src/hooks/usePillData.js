@@ -25,8 +25,19 @@ export const getDaysDifference = (startStr, endStr) => {
 // Use a single static UUID because this is a dedicated single-user app
 const getOrCreateDeviceId = () => '00000000-0000-0000-0000-000000000000';
 
+// Generate or retrieve a persistent client UUID for request log device differentiation
+const getOrCreateClientId = () => {
+  let id = localStorage.getItem('aegis_client_id');
+  if (!id) {
+    id = crypto.randomUUID ? crypto.randomUUID() : 'client-' + Math.random().toString(36).substring(2, 15) + '-' + Date.now().toString(36);
+    localStorage.setItem('aegis_client_id', id);
+  }
+  return id;
+};
+
 export const usePillData = () => {
   const [deviceId] = useState(() => getOrCreateDeviceId());
+  const [clientId] = useState(() => getOrCreateClientId());
   const [isSyncing, setIsSyncing] = useState(false);
 
   const [logs, setLogs] = useState(() => {
@@ -92,6 +103,7 @@ export const usePillData = () => {
         },
         body: JSON.stringify({
           deviceId,
+          clientId,
           settings: newSettings,
           logs: newLogs,
           pwa: isPWA()
@@ -103,14 +115,14 @@ export const usePillData = () => {
       console.warn('Failed to sync with cloud (offline/error):', err);
       throw err;
     }
-  }, [deviceId]);
+  }, [deviceId, clientId]);
 
   // Fetch data from Supabase on startup
   useEffect(() => {
     const loadAndSyncData = async () => {
       setIsSyncing(true);
       try {
-        const res = await fetch(`/api/sync?deviceId=${deviceId}&pwa=${isPWA()}`);
+        const res = await fetch(`/api/sync?deviceId=${deviceId}&clientId=${clientId}&pwa=${isPWA()}`);
         if (res.ok) {
           const data = await res.json();
           if (data.success) {
@@ -186,7 +198,7 @@ export const usePillData = () => {
     };
 
     loadAndSyncData();
-  }, [deviceId, syncData]);
+  }, [deviceId, clientId, syncData]);
 
   // Log pill for a specific date
   const logPill = useCallback((dateStr, status = 'taken') => {
@@ -377,6 +389,7 @@ export const usePillData = () => {
 
   return {
     deviceId,
+    clientId,
     isSyncing,
     logs,
     pillName,

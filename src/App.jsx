@@ -9,6 +9,7 @@ import SettingsView from './components/SettingsView';
 export default function App() {
   const {
     deviceId,
+    clientId,
     logs,
     pillName,
     reminderTime,
@@ -109,6 +110,7 @@ export default function App() {
         return (
           <Dashboard
             deviceId={deviceId}
+            clientId={clientId}
             logs={logs}
             logPill={logPill}
             pillName={pillName}
@@ -144,6 +146,7 @@ export default function App() {
         return (
           <SettingsView
             deviceId={deviceId}
+            clientId={clientId}
             logs={logs}
             pillName={pillName}
             updateSettings={updateSettings}

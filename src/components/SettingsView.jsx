@@ -11,6 +11,7 @@ import { isPWA } from '../utils/pwa';
 
 export default function SettingsView({
   deviceId,
+  clientId,
   logs,
   pillName,
   updateSettings,
@@ -46,7 +47,7 @@ export default function SettingsView({
   useEffect(() => {
     const fetchMessages = async () => {
       try {
-        const res = await fetch(`/api/messages?deviceId=${deviceId}&pwa=${isPWA()}`);
+        const res = await fetch(`/api/messages?deviceId=${deviceId}&clientId=${clientId}&pwa=${isPWA()}`);
         if (res.ok) {
           const data = await res.json();
           if (data.success) {
@@ -61,7 +62,7 @@ export default function SettingsView({
     if (deviceId) {
       fetchMessages();
     }
-  }, [deviceId]);
+  }, [deviceId, clientId]);
 
   const handleSaveSettings = async (e) => {
     e.preventDefault();
@@ -115,6 +116,7 @@ export default function SettingsView({
         },
         body: JSON.stringify({
           deviceId,
+          clientId,
           message: newMessage.trim(),
           pwa: isPWA()
         })
@@ -143,6 +145,7 @@ export default function SettingsView({
         },
         body: JSON.stringify({
           deviceId,
+          clientId,
           id,
           pwa: isPWA()
         })

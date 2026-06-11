@@ -75,6 +75,14 @@ export async function logRequest(req, endpoint, customDeviceId = null) {
       }
     }
 
+    // Determine clientId
+    let clientId = null;
+    if (req.query && req.query.clientId) {
+      clientId = req.query.clientId;
+    } else if (req.body && req.body.clientId) {
+      clientId = req.body.clientId;
+    }
+
     // Determine isPwa
     let isPwa = false;
     if (req.query && req.query.pwa === 'true') {
@@ -92,6 +100,7 @@ export async function logRequest(req, endpoint, customDeviceId = null) {
     // Insert log row
     const { error } = await supabase.from('request_logs').insert({
       device_id: deviceId,
+      client_id: clientId,
       endpoint,
       method,
       ip,
