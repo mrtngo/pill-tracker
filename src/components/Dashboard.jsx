@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getLocalDateString } from '../hooks/usePillData';
 import CozyGarden from './CozyGarden';
+import DashboardPet from './DashboardPet';
 import { isPWA } from '../utils/pwa';
 
 export default function Dashboard({
@@ -272,6 +273,12 @@ export default function Dashboard({
             </p>
           </div>
         </div>
+
+        {/* Coby the Border Collie Pet */}
+        <DashboardPet 
+          isTakenToday={isTakenToday} 
+          isDue={isDue}
+        />
       </div>
 
       {/* Cozy Garden Component */}
