@@ -275,10 +275,10 @@ export default function Dashboard({
         </div>
 
         {/* Coby the Border Collie Pet */}
-        <DashboardPet 
+        {/* <DashboardPet 
           isTakenToday={isTakenToday} 
           isDue={isDue}
-        />
+        /> */}
       </div>
 
       {/* Cozy Garden Component */}
