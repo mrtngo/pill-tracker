@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { isPWA } from '../utils/pwa';
 import { COLLECTIBLE_PRICES, calculateEarnedTokens } from '../components/CozyGarden';
 
@@ -91,6 +91,23 @@ export const usePillData = () => {
     return stored ? { ...defaults, ...JSON.parse(stored) } : defaults;
   });
 
+  const unlockedCollectiblesRef = useRef(unlockedCollectibles);
+  const visibleCollectiblesRef = useRef(visibleCollectibles);
+  const unlockedThemesRef = useRef(unlockedThemes);
+
+  useEffect(() => {
+    unlockedCollectiblesRef.current = unlockedCollectibles;
+  }, [unlockedCollectibles]);
+
+  useEffect(() => {
+    visibleCollectiblesRef.current = visibleCollectibles;
+  }, [visibleCollectibles]);
+
+  useEffect(() => {
+    unlockedThemesRef.current = unlockedThemes;
+  }, [unlockedThemes]);
+
+
 
   // Sync state to localstorage
   useEffect(() => {
@@ -145,9 +162,9 @@ export const usePillData = () => {
           deviceId,
           clientId,
           settings: {
-            unlockedCollectibles,
-            visibleCollectibles,
-            unlockedThemes,
+            unlockedCollectibles: unlockedCollectiblesRef.current,
+            visibleCollectibles: visibleCollectiblesRef.current,
+            unlockedThemes: unlockedThemesRef.current,
             ...newSettings
           },
           logs: newLogs,
@@ -160,7 +177,7 @@ export const usePillData = () => {
       console.warn('Failed to sync with cloud (offline/error):', err);
       throw err;
     }
-  }, [deviceId, clientId, unlockedCollectibles, visibleCollectibles, unlockedThemes]);
+  }, [deviceId, clientId]);
 
   // Fetch data from Supabase on startup
   useEffect(() => {
