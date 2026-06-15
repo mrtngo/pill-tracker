@@ -137,6 +137,9 @@ export default function App() {
             theme={theme}
             unlockedCollectibles={unlockedCollectibles}
             visibleCollectibles={visibleCollectibles}
+            unlockedThemes={unlockedThemes}
+            toggleCollectible={toggleCollectible}
+            onGoToStore={() => setActiveTab('store')}
           />
         );
       case 'store':

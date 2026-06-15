@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getLocalDateString } from '../hooks/usePillData';
-import CozyGarden from './CozyGarden';
+import { getLocalDateString, THEME_PRICES } from '../hooks/usePillData';
+import CozyGarden, { COLLECTIBLE_PRICES, calculateEarnedTokens } from './CozyGarden';
 import DashboardPet from './DashboardPet';
 import { isPWA } from '../utils/pwa';
 
@@ -17,7 +17,10 @@ export default function Dashboard({
   promptMood,
   theme,
   unlockedCollectibles = {},
-  visibleCollectibles = {}
+  visibleCollectibles = {},
+  unlockedThemes = {},
+  toggleCollectible,
+  onGoToStore
 }) {
   const todayStr = getLocalDateString();
   const isTakenToday = !!logs[todayStr]?.taken;
@@ -26,6 +29,41 @@ export default function Dashboard({
   const [isDue, setIsDue] = useState(false);
   const [customPhrases, setCustomPhrases] = useState([]);
   const [isStandalone, setIsStandalone] = useState(true);
+  const [isShelfOpen, setIsShelfOpen] = useState(false);
+
+  const totalEarnedTokens = calculateEarnedTokens(logs) + (import.meta.env.DEV ? 100000 : 0);
+  
+  const spentCollectibles = Object.entries(unlockedCollectibles).reduce((sum, [key, isUnlocked]) => {
+    if (isUnlocked) {
+      return sum + (COLLECTIBLE_PRICES[key] || 0);
+    }
+    return sum;
+  }, 0);
+
+  const spentThemes = Object.entries(unlockedThemes).reduce((sum, [key, isUnlocked]) => {
+    if (isUnlocked && key !== 'cyan') {
+      return sum + (THEME_PRICES[key] || 0);
+    }
+    return sum;
+  }, 0);
+
+  const availableTokens = totalEarnedTokens - (spentCollectibles + spentThemes);
+
+  const items = [
+    { key: 'snail', name: 'Caracolito', icon: '🐌', desc: 'Un caracol sabio que da consejos al tocarlo.' },
+    { key: 'ladybug', name: 'Mariquita', icon: '🐞', desc: 'Una mariquita que agita sus alas al hacerle click.' },
+    { key: 'lights', name: 'Luces de Hada', icon: '✨', desc: 'Luces brillantes de colores alrededor de la maceta.' },
+    { key: 'goldPot', name: 'Maceta de Oro', icon: '🏺', desc: 'Una cubierta de oro pulido para tu maceta.' },
+    { key: 'vines', name: 'Enredaderas', icon: '🌿', desc: 'Hojas trepadoras que decoran los bordes de la pantalla.' },
+    { key: 'crystal', name: 'Cristal Místico', icon: '💎', desc: 'Un cristal mágico que destella al presionarlo.' },
+    { key: 'magicSky', name: 'Cielo Estrellado', icon: '🌌', desc: 'Estrellas titilantes y polvillo mágico flotando.' },
+    { key: 'dog', name: 'Doggo', icon: '🐶', desc: 'El perrito Doggo te acompaña al pie del jardín.' },
+    { key: 'gnome', name: 'Gnomito Guardián', icon: '🧑‍🌾', desc: 'Un gnomo adorable que sostiene carteles motivacionales.' },
+    { key: 'bluebird', name: 'Pajarito Cantor', icon: '🐦', desc: 'Un pajarito azul que canta y aletea al tocarlo.' },
+    { key: 'goldCan', name: 'Regadora de Estrellas', icon: '✨', desc: 'Cambia las gotas de agua al regar por un polvillo dorado.' }
+  ];
+
+  const hasAnyUnlocked = Object.values(unlockedCollectibles).some(val => val === true);
 
   const todayLog = logs[todayStr];
   const todayMood = todayLog?.status && todayLog.status.includes(':') 
@@ -245,6 +283,125 @@ export default function Dashboard({
         unlockedCollectibles={unlockedCollectibles}
         visibleCollectibles={visibleCollectibles}
       />
+
+      {/* Repisa de Colección Card */}
+      <div className="glass-panel shelf-card" style={{ padding: '20px 24px' }}>
+        <div 
+          onClick={() => setIsShelfOpen(!isShelfOpen)}
+          style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            cursor: 'pointer',
+            userSelect: 'none'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span style={{ fontSize: '20px' }}>🎒</span>
+            <div style={{ textAlign: 'left' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Repisa de Colección</h3>
+              <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
+                Tienes 🪙 <strong style={{ color: 'var(--accent-cyan)' }}>{availableTokens}</strong> tokens
+              </p>
+            </div>
+          </div>
+          <div style={{
+            transform: isShelfOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s ease',
+            color: 'var(--text-secondary)'
+          }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </div>
+        </div>
+
+        {isShelfOpen && (
+          <div style={{ marginTop: '20px' }}>
+            {hasAnyUnlocked ? (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '12px' }}>
+                {items
+                  .filter(item => unlockedCollectibles[item.key])
+                  .map(item => {
+                    const isVisible = visibleCollectibles[item.key] !== false;
+                    return (
+                      <div 
+                        key={item.key}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '12px 16px',
+                          borderRadius: '16px',
+                          background: isVisible ? 'rgba(0, 242, 254, 0.04)' : 'rgba(255, 255, 255, 0.02)',
+                          border: isVisible ? '1px solid rgba(0, 242, 254, 0.15)' : '1px solid rgba(255, 255, 255, 0.05)',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', textAlign: 'left' }}>
+                          <span style={{ fontSize: '22px' }}>{item.icon}</span>
+                          <div>
+                            <span style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text-primary)' }}>{item.name}</span>
+                            <p style={{ fontSize: '10px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>{item.desc}</p>
+                          </div>
+                        </div>
+                        {/* Styled Toggle Switch */}
+                        <button
+                          onClick={() => toggleCollectible(item.key, !isVisible)}
+                          style={{
+                            padding: '6px 12px',
+                            borderRadius: '12px',
+                            fontSize: '11px',
+                            fontWeight: '700',
+                            border: 'none',
+                            cursor: 'pointer',
+                            background: isVisible ? 'var(--accent-gradient)' : 'rgba(255, 255, 255, 0.08)',
+                            color: isVisible ? '#fff' : 'var(--text-secondary)',
+                            boxShadow: isVisible ? '0 0 8px var(--accent-gradient-glow)' : 'none',
+                            transition: 'all 0.2s ease'
+                          }}
+                        >
+                          {isVisible ? 'Activo' : 'Activar'}
+                        </button>
+                      </div>
+                    );
+                  })
+                }
+              </div>
+            ) : (
+              <div style={{ 
+                padding: '24px', 
+                textAlign: 'center', 
+                background: 'rgba(255, 255, 255, 0.01)',
+                border: '1px dashed rgba(255, 255, 255, 0.08)',
+                borderRadius: '18px'
+              }}>
+                <p style={{ fontSize: '13px', color: 'var(--text-secondary)', margin: '0 0 16px 0', lineHeight: '1.5' }}>
+                  No tienes decoraciones en tu repisa todavía.<br/>
+                  ¡Visita la Tienda para comprar tu primer compañero o decoración mágica!
+                </p>
+                <button
+                  onClick={onGoToStore}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '14px',
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    border: 'none',
+                    cursor: 'pointer',
+                    background: 'var(--accent-gradient)',
+                    color: '#fff',
+                    boxShadow: '0 4px 12px var(--accent-gradient-glow)',
+                    transition: 'transform 0.2s ease'
+                  }}
+                >
+                  Ir a la Tienda ➔
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Daily Motivation Card */}
       <div className="glass-panel motivation-card">
