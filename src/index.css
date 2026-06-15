@@ -707,14 +707,24 @@ body.theme-sage {
 
 /* Cozy Garden Card & Plant Styles */
 .garden-card {
-  --plant-leaf-color: #06b6d4;
-  --plant-leaf-color-light: #22d3ee;
-  --plant-stem-color: #0891b2;
-  --flower-petal-color: #f43f5e;
-  --flower-center-color: #ecfeff;
-  --plant-glow-color: rgba(6, 182, 212, 0.35);
+  --plant-leaf-color: #10b981;        /* Emerald Green by default (natural & garden-like) */
+  --plant-leaf-color-light: #34d399;  /* Mint Green */
+  --plant-stem-color: #047857;        /* Forest Green */
+  --flower-petal-color: #fbbf24;      /* Amber Yellow */
+  --flower-center-color: #ecfdf5;
+  --plant-glow-color: rgba(16, 185, 129, 0.35);
   transition: all 0.3s ease;
   overflow: visible !important;
+  
+  /* Greenhouse glass theme: soft green filter and border glow */
+  background: linear-gradient(135deg, rgba(16, 22, 32, 0.65) 0%, rgba(16, 185, 129, 0.03) 100%) !important;
+  border-color: rgba(16, 185, 129, 0.15) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), 0 0 25px rgba(16, 185, 129, 0.06) !important;
+}
+
+.garden-card:hover {
+  border-color: rgba(16, 185, 129, 0.28) !important;
+  box-shadow: 0 12px 45px rgba(0, 0, 0, 0.35), 0 0 30px rgba(16, 185, 129, 0.1) !important;
 }
 
 body.theme-amber .garden-card {
@@ -724,6 +734,12 @@ body.theme-amber .garden-card {
   --flower-petal-color: #ee5253;
   --flower-center-color: #fef3c7;
   --plant-glow-color: rgba(255, 159, 67, 0.35);
+  background: linear-gradient(135deg, rgba(36, 24, 16, 0.65) 0%, rgba(255, 159, 67, 0.03) 100%) !important;
+  border-color: rgba(255, 159, 67, 0.15) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), 0 0 25px rgba(255, 159, 67, 0.06) !important;
+}
+body.theme-amber .garden-card:hover {
+  border-color: rgba(255, 159, 67, 0.28) !important;
 }
 
 body.theme-rose .garden-card {
@@ -733,6 +749,12 @@ body.theme-rose .garden-card {
   --flower-petal-color: #ff4d80;
   --flower-center-color: #ffe6ec;
   --plant-glow-color: rgba(255, 117, 143, 0.35);
+  background: linear-gradient(135deg, rgba(38, 20, 26, 0.65) 0%, rgba(255, 117, 143, 0.03) 100%) !important;
+  border-color: rgba(255, 117, 143, 0.15) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), 0 0 25px rgba(255, 117, 143, 0.06) !important;
+}
+body.theme-rose .garden-card:hover {
+  border-color: rgba(255, 117, 143, 0.28) !important;
 }
 
 body.theme-lavender .garden-card {
@@ -742,6 +764,12 @@ body.theme-lavender .garden-card {
   --flower-petal-color: #ec4899;
   --flower-center-color: #f5f3ff;
   --plant-glow-color: rgba(167, 139, 250, 0.35);
+  background: linear-gradient(135deg, rgba(30, 27, 75, 0.6) 0%, rgba(167, 139, 250, 0.03) 100%) !important;
+  border-color: rgba(167, 139, 250, 0.15) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), 0 0 25px rgba(167, 139, 250, 0.06) !important;
+}
+body.theme-lavender .garden-card:hover {
+  border-color: rgba(167, 139, 250, 0.28) !important;
 }
 
 body.theme-sage .garden-card {
@@ -751,6 +779,12 @@ body.theme-sage .garden-card {
   --flower-petal-color: #fbbf24;
   --flower-center-color: #ecfdf5;
   --plant-glow-color: rgba(52, 211, 153, 0.35);
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.65) 0%, rgba(52, 211, 153, 0.03) 100%) !important;
+  border-color: rgba(52, 211, 153, 0.15) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), 0 0 25px rgba(52, 211, 153, 0.06) !important;
+}
+body.theme-sage .garden-card:hover {
+  border-color: rgba(52, 211, 153, 0.28) !important;
 }
 
 /* Animation classes & keyframes */
@@ -1057,8 +1091,366 @@ body.theme-sage .garden-card {
   100% { transform: rotate(8deg); }
 }
 
+/* ==========================================================================
+   Cozy Garden Achievements & Collectibles Styles
+   ========================================================================== */
 
+/* 1. Snail (Caracolito) */
+.snail {
+  transform-origin: -4px 0px;
+  transition: transform 0.2s ease;
+}
+.snail:hover {
+  transform: scale(1.1);
+}
+.snail-hiding {
+  animation: snailHide 1.5s ease-in-out forwards;
+}
+@keyframes snailHide {
+  0% { transform: scale(1); }
+  25% { transform: scale(0.65, 0.95) translate(-3px, 1px); }
+  75% { transform: scale(0.65, 0.95) translate(-3px, 1px); }
+  100% { transform: scale(1); }
+}
 
+/* 2. Ladybug (Mariquita) */
+.ladybug {
+  transition: transform 0.2s ease;
+  transform-origin: 0px 1px;
+}
+.ladybug:hover {
+  transform: scale(1.12);
+}
+.ladybug-flutter .wing-l {
+  transform-origin: -0.5px -1.5px;
+  animation: wingFlutterL 0.08s ease-in-out infinite alternate;
+}
+.ladybug-flutter .wing-r {
+  transform-origin: 0.5px -1.5px;
+  animation: wingFlutterR 0.08s ease-in-out infinite alternate;
+}
+@keyframes wingFlutterL {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(-45deg); }
+}
+@keyframes wingFlutterR {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(45deg); }
+}
+
+/* 3. Fairy Lights (Luces de Hada) */
+.fairy-bulb {
+  transition: all 0.3s ease;
+  fill: rgba(255, 255, 255, 0.35);
+  stroke: rgba(255, 255, 255, 0.15);
+}
+.fairy-lights-on .fairy-bulb {
+  animation: twinkle 1.8s ease-in-out infinite alternate;
+}
+/* Alternating colors */
+.fairy-lights-on .fairy-bulb:nth-child(3n+1) {
+  --bulb-color: #fbbf24;
+  --bulb-glow: rgba(251, 191, 36, 0.85);
+  animation-delay: 0s;
+}
+.fairy-lights-on .fairy-bulb:nth-child(3n+2) {
+  --bulb-color: #38bdf8;
+  --bulb-glow: rgba(56, 189, 248, 0.85);
+  animation-delay: 0.6s;
+}
+.fairy-lights-on .fairy-bulb:nth-child(3n) {
+  --bulb-color: #f43f5e;
+  --bulb-glow: rgba(244, 63, 94, 0.85);
+  animation-delay: 1.2s;
+}
+@keyframes twinkle {
+  0% {
+    fill: rgba(255, 255, 255, 0.4);
+    filter: drop-shadow(0 0 2px rgba(255,255,255,0.2));
+  }
+  100% {
+    fill: var(--bulb-color);
+    filter: drop-shadow(0 0 7px var(--bulb-glow));
+  }
+}
+
+/* 4. Energy Crystal (Cristal Místico) */
+.crystal-shard {
+  transform-origin: 0px 0px;
+  transition: filter 0.3s ease;
+}
+.crystal-group:hover .crystal-shard {
+  filter: brightness(1.25) drop-shadow(0 0 4px rgba(168, 85, 247, 0.6));
+}
+.crystal-glow .crystal-shard {
+  animation: crystalBreathe 3s ease-in-out infinite alternate;
+}
+/* Staggered pulse delays */
+.crystal-glow .shard-1 { animation-delay: 0s; }
+.crystal-glow .shard-2 { animation-delay: 0.4s; }
+.crystal-glow .shard-3 { animation-delay: 0.8s; }
+
+@keyframes crystalBreathe {
+  0% { filter: drop-shadow(0 0 1px rgba(168, 85, 247, 0.2)); }
+  100% { filter: drop-shadow(0 0 7px rgba(216, 180, 254, 0.85)); }
+}
+
+/* Crystal spark particles */
+.sparkle-particle {
+  pointer-events: none;
+  animation: rise-sparkle 1s ease-out forwards;
+}
+@keyframes rise-sparkle {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--tx), var(--ty)) scale(0);
+    opacity: 0;
+  }
+}
+
+/* 5. Mini Gnome (Gnomito) */
+.gnome-group {
+  transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.gnome-group:hover {
+  transform: scale(1.1) rotate(2deg);
+}
+.gnome-bounce {
+  animation: gnomeJump 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+}
+@keyframes gnomeJump {
+  0%, 100% { transform: scale(1) translate(0, 0); }
+  40% { transform: scale(1.1, 0.9) translate(0, -7px) rotate(-3deg); }
+  60% { transform: scale(0.95, 1.05) translate(0, -3px) rotate(2deg); }
+}
+
+/* Speech Bubble SVG animations */
+.speech-bubble-svg {
+  animation: bubbleAppear 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transform-origin: var(--ox, 50px) var(--oy, 100px);
+}
+@keyframes bubbleAppear {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* UI Panel styles for Achievements card */
+.achievements-panel {
+  margin-top: 20px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 16px 20px;
+  text-align: left;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.achievements-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.achievement-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  transition: all 0.2s ease;
+}
+
+.achievement-row.unlocked {
+  background: rgba(16, 185, 129, 0.06);
+  border-color: rgba(16, 185, 129, 0.15);
+}
+
+.achievement-icon {
+  font-size: 20px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.achievement-row.unlocked .achievement-icon {
+  background: rgba(16, 185, 129, 0.15);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
+}
+
+.achievement-info {
+  flex: 1;
+}
+
+.achievement-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.achievement-desc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.achievement-lock-info {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent-amber, #fbbf24);
+  background: rgba(251, 191, 36, 0.1);
+  padding: 3px 8px;
+  border-radius: 8px;
+}
+
+/* Custom Switch for Fairy Lights */
+.cozy-switch-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.cozy-switch {
+  position: relative;
+  display: inline-block;
+  width: 34px;
+  height: 20px;
+}
+
+.cozy-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.cozy-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.1);
+  transition: .3s;
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.cozy-slider:before {
+  position: absolute;
+  content: "";
+  height: 12px;
+  width: 12px;
+  left: 3px;
+  bottom: 3px;
+  background-color: var(--text-muted);
+  transition: .3s;
+  border-radius: 50%;
+}
+
+input:checked + .cozy-slider {
+  background-color: rgba(56, 189, 248, 0.2);
+  border-color: rgba(56, 189, 248, 0.5);
+}
+
+input:checked + .cozy-slider:before {
+  transform: translateX(14px);
+  background-color: var(--accent-cyan);
+  box-shadow: 0 0 6px rgba(56, 189, 248, 0.8);
+}
+
+/* Pot Pulse and Hover Effects when Pending */
+.pending-pot-svg {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transform-origin: 100px 158px;
+}
+
+.pending-pot-svg:hover {
+  transform: scale(1.05);
+}
+
+@keyframes potPulse {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.35;
+    filter: drop-shadow(0 0 1px var(--plant-glow-color));
+  }
+  100% {
+    transform: scale(1.06);
+    opacity: 0.75;
+    filter: drop-shadow(0 0 6px var(--plant-glow-color));
+  }
+}
+
+/* Swaying Leaf Animations for Greenhouse Vines */
+.swaying-leaf {
+  transform-origin: center;
+  animation: leafSway 4s ease-in-out infinite alternate;
+}
+
+.swaying-leaf:nth-child(2n) {
+  animation-delay: 1.2s;
+  animation-duration: 4.8s;
+}
+
+.swaying-leaf:nth-child(3n) {
+  animation-delay: 2.4s;
+  animation-duration: 3.8s;
+}
+
+@keyframes leafSway {
+  0% {
+    transform: rotate(-4deg);
+  }
+  100% {
+    transform: rotate(4deg);
+  }
+}
+
+/* Magic Sky Twinkling Stars */
+.star-twinkle {
+  animation: starTwinklePulse 2.5s infinite alternate ease-in-out;
+  filter: drop-shadow(0 0 4px rgba(253, 224, 71, 0.6));
+  pointer-events: none;
+}
+@keyframes starTwinklePulse {
+  0% {
+    opacity: 0.15;
+    transform: scale(0.75) rotate(0deg);
+  }
+  50% {
+    opacity: 0.8;
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1.15) rotate(15deg);
+  }
+}
+
+/* Bluebird wing flap animation */
+@keyframes wingFlap {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(-45deg);
+  }
+}
 
 
 

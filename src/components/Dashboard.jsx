@@ -15,7 +15,9 @@ export default function Dashboard({
   stats,
   showToast,
   promptMood,
-  theme
+  theme,
+  unlockedCollectibles = {},
+  visibleCollectibles = {}
 }) {
   const todayStr = getLocalDateString();
   const isTakenToday = !!logs[todayStr]?.taken;
@@ -228,65 +230,20 @@ export default function Dashboard({
   return (
     <div className="fade-in-section" style={{ position: 'relative' }}>
       
-      {/* Daily Progress Card */}
-      <div className="glass-panel glow" style={{ textAlign: 'center', position: 'relative' }}>
-        <canvas 
-          ref={canvasRef} 
-          style={{ 
-            position: 'absolute', 
-            top: 0, 
-            left: 0, 
-            width: '100%', 
-            height: '100%', 
-            pointerEvents: 'none',
-            zIndex: 5
-          }} 
-        />
-
-        <h2>Estado Diario</h2>
-        <p className="subtitle" style={{ marginBottom: '12px' }}>
-          Rutina: <strong>{pillName}</strong>
-        </p>
-
-        <div className="pill-action-container">
-          <button 
-            className={`huge-pill-button ${isTakenToday ? 'taken' : ''}`}
-            onClick={handlePillClick}
-            aria-label={isTakenToday ? 'Marcar como no tomada' : 'Registrar toma diaria'}
-          >
-            <div className="pill-glow-ring" />
-            <svg className="pill-icon-svg" viewBox="0 0 24 24">
-              <path d="M4.5 12.5C4.5 8.35786 7.85786 5 12 5C16.1421 5 19.5 8.35786 19.5 12.5C19.5 16.6421 16.1421 20 12 20C7.85786 20 4.5 16.6421 4.5 12.5Z" strokeMiterlimit="10"/>
-              <path d="M7.5 10.5L16.5 14.5" strokeLinecap="round"/>
-            </svg>
-            <span className="pill-status-label">
-              {isTakenToday ? `Tomada ${todayMood}` : 'Registrar'}
-            </span>
-          </button>
-
-          <div style={{ marginTop: '10px' }}>
-            <span className={`status-pill ${isDue && !isTakenToday ? 'due' : isTakenToday ? 'completed' : 'waiting'}`}>
-              {isTakenToday ? '✓ Completado hoy' : isDue ? '⚠️ ¡Toma Pendiente!' : '⏰ Pendiente esta noche'}
-            </span>
-            <p className="timer-text" style={{ marginTop: '8px', fontSize: '14px', color: 'var(--text-secondary)' }}>
-              {timeRemaining}
-            </p>
-          </div>
-        </div>
-
-        {/* Coby the Border Collie Pet */}
-        {/* <DashboardPet 
-          isTakenToday={isTakenToday} 
-          isDue={isDue}
-        /> */}
-      </div>
-
-      {/* Cozy Garden Component */}
+      {/* Cozy Garden Component (Unified Centerpiece) */}
       <CozyGarden 
         currentStreak={currentStreak} 
         isTakenToday={isTakenToday} 
         logs={logs}
         theme={theme} 
+        pillName={pillName}
+        isDue={isDue}
+        timeRemaining={timeRemaining}
+        onPotClick={handlePillClick}
+        canvasRef={canvasRef}
+        todayMood={todayMood}
+        unlockedCollectibles={unlockedCollectibles}
+        visibleCollectibles={visibleCollectibles}
       />
 
       {/* Daily Motivation Card */}

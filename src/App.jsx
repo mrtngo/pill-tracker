@@ -5,6 +5,14 @@ import Dashboard from './components/Dashboard';
 import CalendarView from './components/CalendarView';
 import StatsView from './components/StatsView';
 import SettingsView from './components/SettingsView';
+import StoreView from './components/StoreView';
+
+export const THEME_PRICES = {
+  amber: 15,
+  rose: 25,
+  lavender: 40,
+  sage: 60
+};
 
 export default function App() {
   const {
@@ -23,10 +31,17 @@ export default function App() {
     resetAllData,
     currentStreak,
     longestStreak,
-    stats
+    stats,
+    unlockedCollectibles,
+    visibleCollectibles,
+    unlockedThemes,
+    toggleCollectible,
+    buyCollectible,
+    buyTheme
   } = usePillData();
 
   const [activeTab, setActiveTab] = useState('dashboard');
+
   const [toast, setToast] = useState({ message: '', visible: false });
   const [moodModal, setMoodModal] = useState({ visible: false, dateStr: '', onSelect: null });
 
@@ -120,6 +135,21 @@ export default function App() {
             showToast={showToast}
             promptMood={promptMood}
             theme={theme}
+            unlockedCollectibles={unlockedCollectibles}
+            visibleCollectibles={visibleCollectibles}
+          />
+        );
+      case 'store':
+        return (
+          <StoreView
+            logs={logs}
+            unlockedCollectibles={unlockedCollectibles}
+            visibleCollectibles={visibleCollectibles}
+            buyCollectible={buyCollectible}
+            toggleCollectible={toggleCollectible}
+            unlockedThemes={unlockedThemes}
+            buyTheme={buyTheme}
+            onGoToGarden={() => setActiveTab('dashboard')}
           />
         );
       case 'calendar':
@@ -158,6 +188,7 @@ export default function App() {
             importLogs={importLogs}
             resetAllData={resetAllData}
             showToast={showToast}
+            unlockedThemes={unlockedThemes}
           />
         );
       default:
@@ -243,6 +274,19 @@ export default function App() {
             <line x1="6" y1="20" x2="6" y2="14" />
           </svg>
           Estadísticas
+        </button>
+
+        <button 
+          className={`nav-item ${activeTab === 'store' ? 'active' : ''}`}
+          onClick={() => setActiveTab('store')}
+          aria-label="Tienda"
+        >
+          <svg viewBox="0 0 24 24">
+            <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <path d="M16 10a4 4 0 0 1-8 0" />
+          </svg>
+          Tienda
         </button>
 
         <button 

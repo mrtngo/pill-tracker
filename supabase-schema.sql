@@ -9,6 +9,9 @@ CREATE TABLE IF NOT EXISTS devices (
   start_date TEXT NOT NULL,
   theme TEXT NOT NULL DEFAULT 'cyan',
   push_message TEXT NOT NULL DEFAULT 'No olvides registrar tu hábito de hoy. Toca para registrar.',
+  unlocked_collectibles JSONB NOT NULL DEFAULT '{}'::jsonb,
+  visible_collectibles JSONB NOT NULL DEFAULT '{}'::jsonb,
+  unlocked_themes JSONB NOT NULL DEFAULT '{}'::jsonb,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 

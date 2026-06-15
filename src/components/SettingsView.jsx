@@ -8,6 +8,7 @@ import {
 } from '../utils/notifications';
 import { getLocalDateString } from '../hooks/usePillData';
 import { isPWA } from '../utils/pwa';
+import { THEME_PRICES } from '../App';
 
 export default function SettingsView({
   deviceId,
@@ -22,7 +23,8 @@ export default function SettingsView({
   pushMessage,
   importLogs,
   resetAllData,
-  showToast
+  showToast,
+  unlockedThemes = {}
 }) {
   const [tempName, setTempName] = useState(pillName);
   const [tempTime, setTempTime] = useState(reminderTime);
@@ -309,21 +311,59 @@ export default function SettingsView({
             { id: 'rose', name: 'Cerezo', color: 'linear-gradient(135deg, #ff85a1 0%, #ff758f 100%)' },
             { id: 'lavender', name: 'Ensueño', color: 'linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%)' },
             { id: 'sage', name: 'Bosque', color: 'linear-gradient(135deg, #059669 0%, #34d399 100%)' }
-          ].map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              className={`theme-option-btn ${theme === t.id ? 'active' : ''}`}
-              onClick={() => {
-                changeTheme(t.id);
-                showToast(`Tema ${t.name} aplicado`);
-              }}
-              aria-label={`Cambiar tema a ${t.name}`}
-            >
-              <div className="theme-color-circle" style={{ background: t.color }} />
-              <span className="theme-name-lbl">{t.name}</span>
-            </button>
-          ))}
+          ].map((t) => {
+            const isUnlocked = t.id === 'cyan' || !!unlockedThemes[t.id];
+            const price = THEME_PRICES[t.id] || 0;
+
+            return (
+              <button
+                key={t.id}
+                type="button"
+                className={`theme-option-btn ${theme === t.id ? 'active' : ''}`}
+                onClick={() => {
+                  if (isUnlocked) {
+                    changeTheme(t.id);
+                    showToast(`Tema ${t.name} aplicado`);
+                  } else {
+                    showToast(`¡Desbloquea el tema ${t.name} en el Mercado del Jardín por 🪙 ${price} tokens!`);
+                  }
+                }}
+                style={{
+                  opacity: isUnlocked ? 1 : 0.7,
+                  cursor: 'pointer'
+                }}
+                aria-label={isUnlocked ? `Cambiar tema a ${t.name}` : `Tema ${t.name} bloqueado por ${price} tokens`}
+              >
+                <div className="theme-color-circle" style={{ background: t.color, position: 'relative' }}>
+                  {!isUnlocked && (
+                    <div style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      background: 'rgba(0,0,0,0.5)',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '10px'
+                    }}>
+                      🔒
+                    </div>
+                  )}
+                </div>
+                <span className="theme-name-lbl" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <span>{t.name}</span>
+                  {!isUnlocked && (
+                    <span style={{ fontSize: '9px', fontWeight: '800', color: '#fbbf24', marginTop: '2px' }}>
+                      🪙 {price}
+                    </span>
+                  )}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 

@@ -1,5 +1,13 @@
 import { useState, useEffect, useCallback } from 'react';
 import { isPWA } from '../utils/pwa';
+import { COLLECTIBLE_PRICES, calculateEarnedTokens } from '../components/CozyGarden';
+
+export const THEME_PRICES = {
+  amber: 15,
+  rose: 25,
+  lavender: 40,
+  sage: 60
+};
 
 export const getLocalDateString = (date = new Date()) => {
   const year = date.getFullYear();
@@ -65,6 +73,25 @@ export const usePillData = () => {
     return localStorage.getItem('aegis_push_message') || 'No olvides registrar tu hábito de hoy. Toca para registrar.';
   });
 
+  const [visibleCollectibles, setVisibleCollectibles] = useState(() => {
+    const defaults = { snail: true, ladybug: true, lights: true, vines: true, crystal: true, dog: true, gnome: true, goldPot: true, magicSky: true, bluebird: true, goldCan: true };
+    const stored = localStorage.getItem('aegis_visible_collectibles');
+    return stored ? { ...defaults, ...JSON.parse(stored) } : defaults;
+  });
+
+  const [unlockedCollectibles, setUnlockedCollectibles] = useState(() => {
+    const defaults = { snail: false, ladybug: false, lights: false, vines: false, crystal: false, dog: false, gnome: false, goldPot: false, magicSky: false, bluebird: false, goldCan: false };
+    const stored = localStorage.getItem('aegis_unlocked_collectibles');
+    return stored ? { ...defaults, ...JSON.parse(stored) } : defaults;
+  });
+
+  const [unlockedThemes, setUnlockedThemes] = useState(() => {
+    const defaults = { cyan: true, amber: false, rose: false, lavender: false, sage: false };
+    const stored = localStorage.getItem('aegis_unlocked_themes');
+    return stored ? { ...defaults, ...JSON.parse(stored) } : defaults;
+  });
+
+
   // Sync state to localstorage
   useEffect(() => {
     localStorage.setItem('aegis_pill_logs', JSON.stringify(logs));
@@ -93,6 +120,19 @@ export const usePillData = () => {
     document.body.classList.add(`theme-${theme}`);
   }, [theme]);
 
+  useEffect(() => {
+    localStorage.setItem('aegis_visible_collectibles', JSON.stringify(visibleCollectibles));
+  }, [visibleCollectibles]);
+
+  useEffect(() => {
+    localStorage.setItem('aegis_unlocked_collectibles', JSON.stringify(unlockedCollectibles));
+  }, [unlockedCollectibles]);
+
+  useEffect(() => {
+    localStorage.setItem('aegis_unlocked_themes', JSON.stringify(unlockedThemes));
+  }, [unlockedThemes]);
+
+
   // Cloud Sync POST helper
   const syncData = useCallback(async (newLogs, newSettings) => {
     try {
@@ -104,7 +144,12 @@ export const usePillData = () => {
         body: JSON.stringify({
           deviceId,
           clientId,
-          settings: newSettings,
+          settings: {
+            unlockedCollectibles,
+            visibleCollectibles,
+            unlockedThemes,
+            ...newSettings
+          },
           logs: newLogs,
           pwa: isPWA()
         })
@@ -115,7 +160,7 @@ export const usePillData = () => {
       console.warn('Failed to sync with cloud (offline/error):', err);
       throw err;
     }
-  }, [deviceId, clientId]);
+  }, [deviceId, clientId, unlockedCollectibles, visibleCollectibles, unlockedThemes]);
 
   // Fetch data from Supabase on startup
   useEffect(() => {
@@ -134,6 +179,59 @@ export const usePillData = () => {
             const localStartDate = localStorage.getItem('aegis_start_date') || getLocalDateString();
             const localTheme = localStorage.getItem('aegis_theme') || 'cyan';
             const localPushMessage = localStorage.getItem('aegis_push_message') || 'No olvides registrar tu hábito de hoy. Toca para registrar.';
+
+            // Collectibles defaults
+            const collDefaults = { snail: false, ladybug: false, lights: false, vines: false, crystal: false, dog: false, gnome: false, goldPot: false, magicSky: false, bluebird: false, goldCan: false };
+            const visibleDefaults = { snail: true, ladybug: true, lights: true, vines: true, crystal: true, dog: true, gnome: true, goldPot: true, magicSky: true, bluebird: true, goldCan: true };
+            const themeDefaults = { cyan: true, amber: false, rose: false, lavender: false, sage: false };
+
+            // Load local collectibles first
+            const localUnlockedStr = localStorage.getItem('aegis_unlocked_collectibles');
+            const localUnlocked = localUnlockedStr ? { ...collDefaults, ...JSON.parse(localUnlockedStr) } : collDefaults;
+
+            const localVisibleStr = localStorage.getItem('aegis_visible_collectibles');
+            const localVisible = localVisibleStr ? { ...visibleDefaults, ...JSON.parse(localVisibleStr) } : visibleDefaults;
+
+            const localThemesStr = localStorage.getItem('aegis_unlocked_themes');
+            const localThemes = localThemesStr ? { ...themeDefaults, ...JSON.parse(localThemesStr) } : themeDefaults;
+
+            let mergedUnlocked = { ...localUnlocked };
+            let mergedVisible = { ...localVisible };
+            let mergedThemes = { ...localThemes };
+            let hasNewPurchasesToSync = false;
+
+            if (data.settings) {
+              const cloudUnlocked = data.settings.unlockedCollectibles || {};
+              const cloudVisible = data.settings.visibleCollectibles || {};
+              const cloudThemes = data.settings.unlockedThemes || {};
+
+              // Merge logic: If unlocked on EITHER device, mark as unlocked
+              Object.keys(collDefaults).forEach(k => {
+                const isUnlocked = !!localUnlocked[k] || !!cloudUnlocked[k];
+                if (isUnlocked !== localUnlocked[k] || isUnlocked !== cloudUnlocked[k]) {
+                  mergedUnlocked[k] = isUnlocked;
+                  hasNewPurchasesToSync = true;
+                }
+              });
+
+              Object.keys(themeDefaults).forEach(k => {
+                const isUnlocked = !!localThemes[k] || !!cloudThemes[k];
+                if (isUnlocked !== localThemes[k] || isUnlocked !== cloudThemes[k]) {
+                  mergedThemes[k] = isUnlocked;
+                  hasNewPurchasesToSync = true;
+                }
+              });
+
+              // Merge visible status: default to local choice, but if cloud has different active visible flags, merge them safely
+              Object.keys(visibleDefaults).forEach(k => {
+                const isVisible = localVisible[k] && cloudVisible[k] !== false;
+                mergedVisible[k] = isVisible;
+              });
+
+              setUnlockedCollectibles(mergedUnlocked);
+              setVisibleCollectibles(mergedVisible);
+              setUnlockedThemes(mergedThemes);
+            }
 
             let currentLogs = {};
             // Load local logs first
@@ -166,19 +264,16 @@ export const usePillData = () => {
               return !data.logs[date] || data.logs[date].status !== currentLogs[date].status;
             }) : Object.keys(currentLogs).length > 0;
 
-            if (isDirty || hasNewLogsToUpload) {
-              const settingsToSync = isDirty ? {
-                pillName: localPillName,
-                reminderTime: localReminderTime,
-                startDate: localStartDate,
-                theme: localTheme,
-                pushMessage: localPushMessage
-              } : {
-                pillName: data.settings?.pillName || localPillName,
-                reminderTime: data.settings?.reminderTime || localReminderTime,
-                startDate: data.settings?.startDate || localStartDate,
-                theme: data.settings?.theme || localTheme,
-                pushMessage: data.settings?.pushMessage || localPushMessage
+            if (isDirty || hasNewLogsToUpload || hasNewPurchasesToSync) {
+              const settingsToSync = {
+                pillName: isDirty ? localPillName : (data.settings?.pillName || localPillName),
+                reminderTime: isDirty ? localReminderTime : (data.settings?.reminderTime || localReminderTime),
+                startDate: isDirty ? localStartDate : (data.settings?.startDate || localStartDate),
+                theme: isDirty ? localTheme : (data.settings?.theme || localTheme),
+                pushMessage: isDirty ? localPushMessage : (data.settings?.pushMessage || localPushMessage),
+                unlockedCollectibles: mergedUnlocked,
+                visibleCollectibles: mergedVisible,
+                unlockedThemes: mergedThemes
               };
 
               try {
@@ -384,6 +479,89 @@ export const usePillData = () => {
     };
   }, [logs, startDate]);
 
+  const getSpentTokens = (unlockedColl, unlockedTh) => {
+    const spentCollectibles = Object.entries(unlockedColl).reduce((sum, [k, isUnlocked]) => {
+      if (isUnlocked) {
+        return sum + (COLLECTIBLE_PRICES[k] || 0);
+      }
+      return sum;
+    }, 0);
+    const spentThemes = Object.entries(unlockedTh).reduce((sum, [k, isUnlocked]) => {
+      if (isUnlocked && k !== 'cyan') {
+        return sum + (THEME_PRICES[k] || 0);
+      }
+      return sum;
+    }, 0);
+    return spentCollectibles + spentThemes;
+  };
+
+  const toggleCollectible = useCallback((key, val) => {
+    setVisibleCollectibles(prev => {
+      const updated = { ...prev, [key]: val };
+      syncData(logs, {
+        pillName,
+        reminderTime,
+        startDate,
+        theme,
+        pushMessage,
+        unlockedCollectibles,
+        visibleCollectibles: updated,
+        unlockedThemes
+      }).catch((err) => console.warn('Failed to sync visibility update:', err));
+      return updated;
+    });
+  }, [logs, pillName, reminderTime, startDate, theme, pushMessage, unlockedCollectibles, unlockedThemes, syncData]);
+
+  const buyCollectible = useCallback((key, price) => {
+    const totalEarnedTokens = calculateEarnedTokens(logs) + (import.meta.env.DEV ? 100000 : 0);
+    const spentTokens = getSpentTokens(unlockedCollectibles, unlockedThemes);
+    const availableTokens = totalEarnedTokens - spentTokens;
+
+    if (availableTokens >= price) {
+      setUnlockedCollectibles(prev => {
+        const updated = { ...prev, [key]: true };
+        syncData(logs, {
+          pillName,
+          reminderTime,
+          startDate,
+          theme,
+          pushMessage,
+          unlockedCollectibles: updated,
+          visibleCollectibles,
+          unlockedThemes
+        }).catch((err) => console.warn('Failed to sync collectible purchase:', err));
+        return updated;
+      });
+      return true;
+    }
+    return false;
+  }, [logs, unlockedCollectibles, unlockedThemes, visibleCollectibles, pillName, reminderTime, startDate, theme, pushMessage, syncData]);
+
+  const buyTheme = useCallback((themeId, price) => {
+    const totalEarnedTokens = calculateEarnedTokens(logs) + (import.meta.env.DEV ? 100000 : 0);
+    const spentTokens = getSpentTokens(unlockedCollectibles, unlockedThemes);
+    const availableTokens = totalEarnedTokens - spentTokens;
+
+    if (availableTokens >= price) {
+      setUnlockedThemes(prev => {
+        const updated = { ...prev, [themeId]: true };
+        syncData(logs, {
+          pillName,
+          reminderTime,
+          startDate,
+          theme,
+          pushMessage,
+          unlockedCollectibles,
+          visibleCollectibles,
+          unlockedThemes: updated
+        }).catch((err) => console.warn('Failed to sync theme purchase:', err));
+        return updated;
+      });
+      return true;
+    }
+    return false;
+  }, [logs, unlockedCollectibles, unlockedThemes, visibleCollectibles, pillName, reminderTime, startDate, theme, pushMessage, syncData]);
+
   const { currentStreak, longestStreak } = calculateStreaks();
   const stats = getStats();
 
@@ -407,6 +585,12 @@ export const usePillData = () => {
     resetAllData,
     currentStreak,
     longestStreak,
-    stats
+    stats,
+    unlockedCollectibles,
+    visibleCollectibles,
+    unlockedThemes,
+    toggleCollectible,
+    buyCollectible,
+    buyTheme
   };
 };

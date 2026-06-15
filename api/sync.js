@@ -67,7 +67,10 @@ export default async function handler(req, res) {
         reminderTime: device.reminder_time,
         startDate: device.start_date,
         theme: device.theme || 'cyan',
-        pushMessage: device.push_message || 'No olvides registrar tu hábito de hoy. Toca para registrar.'
+        pushMessage: device.push_message || 'No olvides registrar tu hábito de hoy. Toca para registrar.',
+        unlockedCollectibles: device.unlocked_collectibles || {},
+        visibleCollectibles: device.visible_collectibles || {},
+        unlockedThemes: device.unlocked_themes || {}
       } : null;
 
       return res.status(200).json({ success: true, settings, logs });
@@ -105,7 +108,10 @@ export default async function handler(req, res) {
             reminder_time: settings ? settings.reminderTime : '21:00',
             start_date: settings ? settings.startDate : new Date().toISOString().split('T')[0],
             theme: settings ? (settings.theme || 'cyan') : 'cyan',
-            push_message: settings ? (settings.pushMessage || 'No olvides registrar tu hábito de hoy. Toca para registrar.') : 'No olvides registrar tu hábito de hoy. Toca para registrar.'
+            push_message: settings ? (settings.pushMessage || 'No olvides registrar tu hábito de hoy. Toca para registrar.') : 'No olvides registrar tu hábito de hoy. Toca para registrar.',
+            unlocked_collectibles: settings ? (settings.unlockedCollectibles || {}) : {},
+            visible_collectibles: settings ? (settings.visibleCollectibles || {}) : {},
+            unlocked_themes: settings ? (settings.unlockedThemes || {}) : {}
           });
         if (insertDevError) throw insertDevError;
       }
@@ -120,7 +126,10 @@ export default async function handler(req, res) {
             reminder_time: settings.reminderTime,
             start_date: settings.startDate,
             theme: settings.theme || 'cyan',
-            push_message: settings.pushMessage || 'No olvides registrar tu hábito de hoy. Toca para registrar.'
+            push_message: settings.pushMessage || 'No olvides registrar tu hábito de hoy. Toca para registrar.',
+            unlocked_collectibles: settings.unlockedCollectibles || {},
+            visible_collectibles: settings.visibleCollectibles || {},
+            unlocked_themes: settings.unlockedThemes || {}
           });
 
         if (settingsErr) throw settingsErr;

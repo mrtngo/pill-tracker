@@ -44,7 +44,7 @@ export default function DashboardPet({ isTakenToday, isDue }) {
     let targetX = Math.floor(Math.random() * 70) + 15;
     let distance = Math.abs(targetX - currentPos);
     
-    // Ensure the target is far enough from Coby's current spot
+    // Ensure the target is far enough from Doggo's current spot
     let attempts = 0;
     while (distance < 15 && attempts < 5) {
       targetX = Math.floor(Math.random() * 70) + 15;

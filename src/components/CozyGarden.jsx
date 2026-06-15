@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
+import DashboardPet from './DashboardPet';
 
 const MONTH_NAMES = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -16,7 +17,7 @@ const PLANT_NAMES = [
 const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
 
 // Helper to parse logs and count taken pills for a specific year and month
-const getMonthlyStats = (logs, year, monthIndex, forceTakenToday = false) => {
+export const getMonthlyStats = (logs, year, monthIndex, forceTakenToday = false) => {
   const prefix = `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
   const daysInMonth = getDaysInMonth(year, monthIndex);
   
@@ -51,7 +52,62 @@ const getMonthlyStats = (logs, year, monthIndex, forceTakenToday = false) => {
   return { takenCount, daysInMonth, pct, stage };
 };
 
-export default function CozyGarden({ currentStreak, isTakenToday, logs, theme }) {
+export const COLLECTIBLE_PRICES = {
+  snail: 5,
+  ladybug: 10,
+  lights: 20,
+  goldPot: 40,
+  vines: 35,
+  crystal: 50,
+  magicSky: 60,
+  dog: 75,
+  gnome: 100,
+  bluebird: 30,
+  goldCan: 25
+};
+
+export const calculateEarnedTokens = (logs) => {
+  let takenCount = 0;
+  const months = new Set();
+  
+  Object.entries(logs || {}).forEach(([dateStr, logInfo]) => {
+    if (logInfo?.taken) {
+      takenCount++;
+      const parts = dateStr.split('-');
+      if (parts.length >= 2) {
+        months.add(`${parts[0]}-${parts[1]}`);
+      }
+    }
+  });
+
+  let completedMonthsCount = 0;
+  months.forEach(monthKey => {
+    const [year, month] = monthKey.split('-').map(Number);
+    const mIdx = month - 1;
+    const stats = getMonthlyStats(logs, year, mIdx);
+    if (stats.stage === 5) {
+      completedMonthsCount++;
+    }
+  });
+
+  return takenCount + (completedMonthsCount * 10) + 50;
+};
+
+export default function CozyGarden({
+  currentStreak,
+  isTakenToday,
+  logs,
+  theme,
+  pillName = 'Pastilla',
+  isDue = false,
+  timeRemaining = '',
+  onPotClick,
+  canvasRef,
+  todayMood = '',
+  unlockedCollectibles = {},
+  visibleCollectibles = {}
+}) {
+
   const today = new Date();
   const currentYear = today.getFullYear();
   const currentMonthIdx = today.getMonth(); // 0-11
@@ -66,6 +122,84 @@ export default function CozyGarden({ currentStreak, isTakenToday, logs, theme })
   const [showShelf, setShowShelf] = useState(false);
 
   const prevTakenRef = useRef(isTakenToday);
+
+  const [snailSpeech, setSnailSpeech] = useState(null);
+  const [snailHiding, setSnailHiding] = useState(false);
+  const [ladybugFluttering, setLadybugFluttering] = useState(false);
+  const [crystalSparkles, setCrystalSparkles] = useState([]);
+  const [crystalActive, setCrystalActive] = useState(false);
+  const [gnomeSpeech, setGnomeSpeech] = useState(null);
+  const [gnomeBouncing, setGnomeBouncing] = useState(false);
+  const [birdSinging, setBirdSinging] = useState(false);
+
+  const handleBirdClick = (e) => {
+    e.stopPropagation();
+    if (birdSinging) return;
+    setBirdSinging(true);
+    setTimeout(() => setBirdSinging(false), 2500);
+  };
+
+  const handleSnailClick = (e) => {
+    e.stopPropagation();
+    if (snailHiding) return;
+    setSnailHiding(true);
+    const phrases = [
+      "¡Paso a paso, vas súper bien! 🐌",
+      "Despacito pero seguro... ✨",
+      "Tu constancia es hermosa. 💖",
+      "Disfruta del camino hoy. 🍃",
+      "Cada día cuenta, ¡sigue así! 🌟"
+    ];
+    const randPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+    setSnailSpeech(randPhrase);
+    setTimeout(() => setSnailSpeech(null), 3000);
+    setTimeout(() => setSnailHiding(false), 1500);
+  };
+
+  const handleLadybugClick = (e) => {
+    e.stopPropagation();
+    if (ladybugFluttering) return;
+    setLadybugFluttering(true);
+    setTimeout(() => setLadybugFluttering(false), 1500);
+  };
+
+  const handleCrystalClick = (e) => {
+    e.stopPropagation();
+    if (crystalActive) return;
+    setCrystalActive(true);
+    
+    // Generate 6 sparkling particles with random offsets
+    const newParticles = Array.from({ length: 6 }).map((_, idx) => ({
+      id: Date.now() + '-' + idx,
+      tx: (Math.random() - 0.5) * 45, // target x offset
+      ty: -25 - Math.random() * 30,   // target y offset (rises)
+      color: ['#c084fc', '#a855f7', '#d8b4fe', '#fb7185', '#38bdf8'][Math.floor(Math.random() * 5)]
+    }));
+    
+    setCrystalSparkles(newParticles);
+    setTimeout(() => {
+      setCrystalActive(false);
+      setCrystalSparkles([]);
+    }, 1000);
+  };
+
+  const handleGnomeClick = (e) => {
+    e.stopPropagation();
+    if (gnomeBouncing) return;
+    setGnomeBouncing(true);
+    const phrases = [
+      "¡Cultiva tu rutina! 🧑‍🌾",
+      "¡100% constancia, sí señor! 🔥",
+      "¡Cuidarse es ganar! 🌟",
+      "Gnomito aprobado 👍",
+      "¡Racha de campeones! 🏆",
+      "¡Haz de hoy un gran día! ☀️"
+    ];
+    const randPhrase = phrases[Math.floor(Math.random() * phrases.length)];
+    setGnomeSpeech(randPhrase);
+    setTimeout(() => setGnomeSpeech(null), 3000);
+    setTimeout(() => setGnomeBouncing(false), 600);
+  };
 
   // Auto-watering detection on mark taken
   useEffect(() => {
@@ -103,15 +237,17 @@ export default function CozyGarden({ currentStreak, isTakenToday, logs, theme })
     }
 
     if (!isTakenToday) {
-      setShowWateringAlert(true);
-      setTimeout(() => setShowWateringAlert(false), 3000);
-    }
-    
-    setWobble(true);
-    setTimeout(() => setWobble(false), 600);
-    
-    if (isTakenToday && !isWatering) {
-      triggerWatering(false);
+      // Trigger modal logger callback
+      if (onPotClick) {
+        onPotClick();
+      }
+    } else {
+      setWobble(true);
+      setTimeout(() => setWobble(false), 600);
+      
+      if (!isWatering) {
+        triggerWatering(false);
+      }
     }
   };
 
@@ -168,6 +304,10 @@ export default function CozyGarden({ currentStreak, isTakenToday, logs, theme })
 
   const isViewingCurrentMonth = viewMonth === currentMonthIdx && viewYear === currentYear;
 
+  const isGoldCanActive = unlockedCollectibles.goldCan && visibleCollectibles.goldCan;
+  const dropColor = isGoldCanActive ? "#fbbf24" : "var(--accent-cyan)";
+  const dropFilter = isGoldCanActive ? "drop-shadow(0 0 5px rgba(251, 191, 36, 0.85))" : undefined;
+
   // 2. Get stats for the viewed month (pulls from shelf if we are in testing/mock mode for historical months)
   const viewMonthStats = (() => {
     if (isViewingCurrentMonth) {
@@ -191,33 +331,31 @@ export default function CozyGarden({ currentStreak, isTakenToday, logs, theme })
     const yearStr = viewYear;
     
     if (!isViewingCurrentMonth) {
-      // Historical plant text
       if (viewStage === 5) {
-        return `¡Tu planta de ${monthName} ${yearStr} floreció con éxito! Lograste un ${Math.round(viewMonthStats.pct)}% de constancia. 🌸`;
+        return `¡Planta de ${monthName} ${yearStr} florecida! (${Math.round(viewMonthStats.pct)}% constancia) 🌸`;
       }
       if (viewStage > 0) {
-        return `Tu planta de ${monthName} ${yearStr} creció hasta la etapa ${viewStage} con un ${Math.round(viewMonthStats.pct)}% de constancia. 🌿`;
+        return `Planta de ${monthName} ${yearStr} (Etapa ${viewStage} - ${Math.round(viewMonthStats.pct)}% constancia) 🌿`;
       }
-      return `No se registraron tomas para el mes de ${monthName} ${yearStr}. 🏜️`;
+      return `Sin registros en ${monthName} ${yearStr}. 🏜️`;
     }
     
-    // Active month text
     if (!isTakenToday) {
       if (viewTakenCount === 0) {
-        return `Tu maceta está vacía. ¡Registra tu ritual hoy para sembrar tu semilla de ${monthName} ${yearStr}! 🌱`;
+        return `Maceta vacía. ¡Toca la maceta para sembrar tu hábito hoy! 🌱`;
       }
-      return `Tu planta de ${monthName} ${yearStr} tiene algo de sed. ¡Regístrala hoy para mantenerla fresca! 🏜️`;
+      return `Planta con sed. ¡Toca la maceta para regar tu ritual de hoy! 🏜️`;
     } else {
       if (viewStage === 0) {
-        return `¡Semilla sembrada! Tu planta de ${monthName} ${yearStr} brotará mañana si mantienes tu ritual. ✨`;
+        return `¡Semilla sembrada! Brotará mañana con tu constancia. ✨`;
       }
       if (viewStage === 1) {
-        return `¡Brote regado! Sigue así para ver crecer tu planta de ${monthName} ${yearStr}. 💦`;
+        return `¡Brote regado! Sigue adelante. 💦`;
       }
       if (viewStage === 5) {
-        return `¡Tu planta de ${monthName} ${yearStr} está en flor! Una constancia hermosa e inspiradora. 🌸`;
+        return `¡Planta florecida! Constancia hermosa y motivadora. 🌸`;
       }
-      return `¡Planta de ${monthName} ${yearStr} regada y feliz! Sigue cultivando tu rutina. 💧`;
+      return `¡Planta regada y feliz! 💧`;
     }
   };
 
@@ -587,30 +725,163 @@ export default function CozyGarden({ currentStreak, isTakenToday, logs, theme })
   };
 
   return (
-    <div className="glass-panel garden-card" style={{ marginTop: '20px', padding: '20px', textAlign: 'center' }}>
+    <>
+      <div className="glass-panel garden-card" style={{ marginTop: '20px', padding: '20px', textAlign: 'center', position: 'relative' }}>
+        
+        {/* Twinkling magic sky stars */}
+        {unlockedCollectibles.magicSky && visibleCollectibles.magicSky && (
+          <div className="magic-sky-stars" style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            pointerEvents: 'none',
+            overflow: 'hidden',
+            zIndex: 0
+          }}>
+            <div className="star-twinkle" style={{ position: 'absolute', top: '12%', left: '14%', fontSize: '10px' }}>⭐</div>
+            <div className="star-twinkle" style={{ position: 'absolute', top: '22%', left: '74%', fontSize: '8px', animationDelay: '0.5s' }}>⭐</div>
+            <div className="star-twinkle" style={{ position: 'absolute', top: '42%', left: '8%', fontSize: '9px', animationDelay: '1.2s' }}>⭐</div>
+            <div className="star-twinkle" style={{ position: 'absolute', top: '8%', left: '46%', fontSize: '11px', animationDelay: '0.8s' }}>⭐</div>
+            <div className="star-twinkle" style={{ position: 'absolute', top: '32%', left: '86%', fontSize: '7px', animationDelay: '2.1s' }}>⭐</div>
+            <div className="star-twinkle" style={{ position: 'absolute', top: '52%', left: '80%', fontSize: '10px', animationDelay: '1.5s' }}>⭐</div>
+            <div className="star-twinkle" style={{ position: 'absolute', top: '62%', left: '16%', fontSize: '8px', animationDelay: '0.3s' }}>⭐</div>
+            <div className="star-twinkle" style={{ position: 'absolute', top: '72%', left: '86%', fontSize: '9px', animationDelay: '1.7s' }}>⭐</div>
+          </div>
+        )}
       
+      {/* Confetti canvas element */}
+      <canvas 
+        ref={canvasRef} 
+        style={{ 
+          position: 'absolute', 
+          top: 0, 
+          left: 0, 
+          width: '100%', 
+          height: '100%', 
+          pointerEvents: 'none',
+          zIndex: 5
+        }} 
+      />
+
+      {/* 20-Day Streak Climbing & Hanging Vines (Trepadora) */}
+      {unlockedCollectibles.vines && visibleCollectibles.vines && (
+        <>
+          {/* Top Hanging Corner Vines */}
+          <svg style={{ position: 'absolute', top: 0, left: 0, width: '80px', height: '80px', pointerEvents: 'none', zIndex: 1 }} viewBox="0 0 80 80">
+            <path d="M 0 0 C 30 10 40 30 35 55" fill="none" stroke="var(--plant-stem-color)" strokeWidth="1.5" strokeLinecap="round" />
+            <path className="swaying-leaf" d="M 15 8 C 25 15 30 10 22 3 C 12 -4 5 1 15 8" fill="var(--plant-leaf-color)" opacity="0.85" />
+            <path className="swaying-leaf" d="M 30 22 C 40 30 42 22 32 15 C 22 8 20 14 30 22" fill="var(--plant-leaf-color-light)" opacity="0.85" />
+            <path className="swaying-leaf" d="M 35 40 C 45 50 48 42 38 35 C 28 28 25 32 35 40" fill="var(--plant-leaf-color)" opacity="0.85" />
+          </svg>
+          <svg style={{ position: 'absolute', top: 0, right: 0, width: '80px', height: '80px', pointerEvents: 'none', zIndex: 1 }} viewBox="0 0 80 80">
+            <path d="M 80 0 C 50 10 40 30 45 55" fill="none" stroke="var(--plant-stem-color)" strokeWidth="1.5" strokeLinecap="round" />
+            <path className="swaying-leaf" d="M 65 8 C 55 15 50 10 58 3 C 68 -4 75 1 65 8" fill="var(--plant-leaf-color)" opacity="0.85" />
+            <path className="swaying-leaf" d="M 50 22 C 40 30 38 22 48 15 C 58 8 60 14 50 22" fill="var(--plant-leaf-color-light)" opacity="0.85" />
+            <path className="swaying-leaf" d="M 45 40 C 35 50 32 42 42 35 C 52 28 55 32 45 40" fill="var(--plant-leaf-color)" opacity="0.85" />
+          </svg>
+
+          {/* Full-Height Margin Climbing Vines */}
+          <svg style={{ position: 'absolute', top: 12, bottom: 12, left: 6, width: '80px', pointerEvents: 'none', zIndex: 1 }} viewBox="0 0 80 400" preserveAspectRatio="none">
+            {/* Main climbing stem from bottom (y=400) to top (y=0) */}
+            <path d="M 10 400 Q 25 320 12 260 T 18 120 T 5 0" fill="none" stroke="var(--plant-stem-color)" strokeWidth="1.5" strokeLinecap="round" />
+            {/* Leaves growing along the stem */}
+            <path className="swaying-leaf" d="M 14 365 C 24 370 26 360 20 355 C 12 350 8 356 14 365" fill="var(--plant-leaf-color)" opacity="0.85" />
+            <path className="swaying-leaf" d="M 11 320 C 24 315 21 305 14 308 C 7 310 4 315 11 320" fill="var(--plant-leaf-color-light)" opacity="0.85" />
+            <path className="swaying-leaf" d="M 16 270 C 28 265 30 275 23 280 C 16 285 10 277 16 270" fill="var(--plant-leaf-color)" opacity="0.85" />
+            <path className="swaying-leaf" d="M 17 215 C 30 210 25 200 18 205 C 11 210 10 218 17 215" fill="var(--plant-leaf-color-light)" opacity="0.85" />
+            <path className="swaying-leaf" d="M 12 165 C 3 160 0 172 7 175 C 13 177 17 170 12 165" fill="var(--plant-leaf-color)" opacity="0.85" />
+            <path className="swaying-leaf" d="M 16 115 C 26 120 28 110 22 105 C 14 100 10 106 16 115" fill="var(--plant-leaf-color-light)" opacity="0.85" />
+            <path className="swaying-leaf" d="M 13 70 C 26 65 23 55 16 58 C 9 60 6 65 13 70" fill="var(--plant-leaf-color)" opacity="0.85" />
+            <path className="swaying-leaf" d="M 8 25 C -1 20 -4 32 3 35 C 9 37 13 30 8 25" fill="var(--plant-leaf-color-light)" opacity="0.85" />
+          </svg>
+          <svg style={{ position: 'absolute', top: 12, bottom: 12, right: 6, width: '80px', pointerEvents: 'none', zIndex: 1 }} viewBox="0 0 80 400" preserveAspectRatio="none">
+            {/* Main climbing stem from bottom (y=400) to top (y=0) */}
+            <path d="M 70 400 Q 55 320 68 260 T 62 120 T 75 0" fill="none" stroke="var(--plant-stem-color)" strokeWidth="1.5" strokeLinecap="round" />
+            {/* Leaves growing along the stem */}
+            <path className="swaying-leaf" d="M 66 365 C 56 370 54 360 60 355 C 68 350 72 356 66 365" fill="var(--plant-leaf-color)" opacity="0.85" />
+            <path className="swaying-leaf" d="M 69 320 C 56 315 59 305 66 308 C 73 310 76 315 69 320" fill="var(--plant-leaf-color-light)" opacity="0.85" />
+            <path className="swaying-leaf" d="M 64 270 C 52 265 50 275 57 280 C 64 285 70 277 64 270" fill="var(--plant-leaf-color)" opacity="0.85" />
+            <path className="swaying-leaf" d="M 63 215 C 50 210 55 200 62 205 C 69 210 70 218 63 215" fill="var(--plant-leaf-color-light)" opacity="0.85" />
+            <path className="swaying-leaf" d="M 68 165 C 77 160 80 172 73 175 C 67 177 63 170 68 165" fill="var(--plant-leaf-color)" opacity="0.85" />
+            <path className="swaying-leaf" d="M 64 115 C 54 120 52 110 58 105 C 66 100 70 106 64 115" fill="var(--plant-leaf-color-light)" opacity="0.85" />
+            <path className="swaying-leaf" d="M 67 70 C 54 65 57 55 64 58 C 71 60 74 65 67 70" fill="var(--plant-leaf-color)" opacity="0.85" />
+            <path className="swaying-leaf" d="M 72 25 C 81 20 84 32 77 35 C 71 37 67 30 72 25" fill="var(--plant-leaf-color-light)" opacity="0.85" />
+          </svg>
+        </>
+      )}
+
       {/* Top Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-        <h3 style={{ fontSize: '15px', fontWeight: '700', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <span>🌱</span> {isViewingCurrentMonth ? 'Mi Jardín' : 'Colección'}: {PLANT_NAMES[viewMonth]} <span style={{ fontSize: '12px', fontWeight: '500', color: 'var(--text-secondary)' }}>({MONTH_NAMES[viewMonth]} {viewYear})</span>
-        </h3>
-        <span style={{ 
+      <div style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        textAlign: 'center',
+        marginBottom: '20px',
+        gap: '6px',
+        padding: '0 24px'
+      }}>
+        {/* Row 1: Month and Year */}
+        <div style={{ 
           fontSize: '11px', 
-          background: 'rgba(255,255,255,0.08)', 
-          padding: '4px 8px', 
-          borderRadius: '12px',
-          color: 'var(--text-secondary)'
+          color: 'var(--text-secondary)', 
+          fontWeight: '700', 
+          textTransform: 'uppercase', 
+          letterSpacing: '1px' 
         }}>
-          Régimen: <strong>{viewTakenCount}/{viewDaysInMonth} d</strong>
-        </span>
+          📅 {MONTH_NAMES[viewMonth]} {viewYear} {isViewingCurrentMonth && `(${pillName})`}
+        </div>
+
+        {/* Row 2: Name of the Plant */}
+        <h3 style={{ 
+          fontSize: '16px', 
+          fontWeight: '800', 
+          margin: 0, 
+          color: 'var(--text-primary)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px'
+        }}>
+          🌱 {PLANT_NAMES[viewMonth]}
+        </h3>
+
+        {/* Row 3: Status / "Pendiente esta noche" */}
+        {isViewingCurrentMonth ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+            <span className={`status-pill ${isDue && !isTakenToday ? 'due' : isTakenToday ? 'completed' : 'waiting'}`} style={{ fontSize: '11px', fontWeight: '700' }}>
+              {isTakenToday ? `✓ Completado hoy${todayMood ? ' ' + todayMood : ''}` : isDue ? '⚠️ ¡Toma Pendiente!' : '⏰ Pendiente esta noche'}
+            </span>
+            {/* Row 4: Timer */}
+            {timeRemaining && (
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '500' }}>
+                {timeRemaining}
+              </span>
+            )}
+          </div>
+        ) : (
+          <span style={{ 
+            fontSize: '11px', 
+            background: 'rgba(255,255,255,0.08)', 
+            padding: '4px 10px', 
+            borderRadius: '12px',
+            color: 'var(--text-secondary)',
+            fontWeight: '600',
+            marginTop: '2px'
+          }}>
+            Régimen: <strong>{viewTakenCount}/{viewDaysInMonth} d</strong>
+          </span>
+        )}
       </div>
 
       {/* Main pot display */}
-      <div style={{ position: 'relative', height: '190px', display: 'flex', justifyContent: 'center', alignItems: 'flex-end', overflow: 'hidden' }}>
+      <div style={{ position: 'relative', height: '190px', display: 'flex', justifyContent: 'center', alignItems: 'flex-end', overflow: 'visible' }}>
         <svg 
           viewBox="0 0 200 200" 
           width="200" 
           height="200" 
+          className={(!isTakenToday && isViewingCurrentMonth) ? "pending-pot-svg" : ""}
           style={{ cursor: 'pointer', overflow: 'visible' }}
           onClick={handlePotClick}
         >
@@ -618,6 +889,12 @@ export default function CozyGarden({ currentStreak, isTakenToday, logs, theme })
             <linearGradient id="potGradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" stopColor="rgba(255,255,255,0.22)" />
               <stop offset="100%" stopColor="rgba(255,255,255,0.04)" />
+            </linearGradient>
+
+            <linearGradient id="goldPotGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ffe259" stopOpacity="0.95" />
+              <stop offset="50%" stopColor="#ffa751" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0.65" />
             </linearGradient>
             
             <linearGradient id="soilGradient" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -634,6 +911,35 @@ export default function CozyGarden({ currentStreak, isTakenToday, logs, theme })
           {/* Wooden windowsill lines */}
           <rect x="15" y="165" width="170" height="6" rx="3" fill="rgba(255, 255, 255, 0.15)" />
           <rect x="25" y="171" width="150" height="4" rx="2" fill="rgba(0, 0, 0, 0.2)" />
+
+          {/* Windowsill grass (organic sprouts at the base of the sill) */}
+          <g fill="var(--plant-leaf-color)" opacity="0.8" style={{ pointerEvents: 'none' }}>
+            <path className="swaying-leaf" d="M 18 165 Q 15 155 10 152 Q 17 156 18 165" />
+            <path className="swaying-leaf" d="M 24 165 Q 28 152 34 148 Q 28 158 24 165" />
+            <path className="swaying-leaf" d="M 38 165 Q 40 157 45 154 Q 41 160 38 165" />
+            <path className="swaying-leaf" d="M 172 165 Q 175 155 180 152 Q 173 158 172 165" />
+            <path className="swaying-leaf" d="M 164 165 Q 160 150 154 146 Q 162 154 164 165" />
+            <path className="swaying-leaf" d="M 152 165 Q 149 157 144 153 Q 150 159 152 165" />
+          </g>
+
+          {/* Pulsing ring around pot if NOT taken today (call to action) */}
+          {!isTakenToday && isViewingCurrentMonth && (
+            <ellipse 
+              cx="100" 
+              cy="158" 
+              rx="36" 
+              ry="7" 
+              fill="none" 
+              stroke="var(--accent-cyan)" 
+              strokeWidth="1.5" 
+              style={{
+                opacity: 0.7,
+                transformOrigin: '100px 158px',
+                animation: 'potPulse 2s infinite alternate',
+                pointerEvents: 'none'
+              }} 
+            />
+          )}
 
           {/* Soil */}
           <ellipse cx="100" cy="122" rx="23" ry="5" fill="url(#soilGradient)" />
@@ -655,17 +961,219 @@ export default function CozyGarden({ currentStreak, isTakenToday, logs, theme })
           <ellipse cx="100" cy="122" rx="27" ry="2" fill="rgba(0,0,0,0.15)" />
 
           {/* Glass Pot */}
-          <path d="M73 122 L77 155 C78 159, 122 159, 123 155 L127 122 Z" fill="url(#potGradient)" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-          <ellipse cx="100" cy="122" rx="27" ry="3.5" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.2)" strokeWidth="0.75" />
+          <path 
+            d="M73 122 L77 155 C78 159, 122 159, 123 155 L127 122 Z" 
+            fill={unlockedCollectibles.goldPot && visibleCollectibles.goldPot ? "url(#goldPotGradient)" : "url(#potGradient)"} 
+            stroke={unlockedCollectibles.goldPot && visibleCollectibles.goldPot ? "rgba(255, 226, 89, 0.4)" : "rgba(255,255,255,0.15)"} 
+            strokeWidth="1" 
+          />
+          <ellipse 
+            cx="100" 
+            cy="122" 
+            rx="27" 
+            ry="3.5" 
+            fill={unlockedCollectibles.goldPot && visibleCollectibles.goldPot ? "rgba(255, 226, 89, 0.25)" : "rgba(255,255,255,0.08)"} 
+            stroke={unlockedCollectibles.goldPot && visibleCollectibles.goldPot ? "rgba(255, 226, 89, 0.7)" : "rgba(255,255,255,0.2)"} 
+            strokeWidth="0.75" 
+          />
+
+
+
+          {/* 1. Fairy Lights */}
+          {unlockedCollectibles.lights && visibleCollectibles.lights && (
+            <g className="fairy-lights-on">
+              {/* Wire string */}
+              <path 
+                d="M73,124 Q100,133 127,124 Q100,144 76,144 Q100,154 124,153" 
+                fill="none" 
+                stroke="rgba(255,255,255,0.25)" 
+                strokeWidth="0.75" 
+                style={{ pointerEvents: 'none' }} 
+              />
+              {/* Bulbs */}
+              <circle cx="86" cy="126.5" r="2" className="fairy-bulb" />
+              <circle cx="100" cy="128.5" r="2" className="fairy-bulb" />
+              <circle cx="114" cy="126.5" r="2" className="fairy-bulb" />
+              <circle cx="90" cy="144" r="2" className="fairy-bulb" />
+              <circle cx="110" cy="144.5" r="2" className="fairy-bulb" />
+              <circle cx="100" cy="153.5" r="2" className="fairy-bulb" />
+            </g>
+          )}
+
+          {/* 2. Happy Snail */}
+          {unlockedCollectibles.snail && visibleCollectibles.snail && (
+            <g 
+              className={`snail ${snailHiding ? 'snail-hiding' : ''}`} 
+              transform="translate(71, 122.5)" 
+              onClick={handleSnailClick}
+              style={{ cursor: 'pointer' }}
+            >
+              {/* Body */}
+              <path 
+                d="M-8,0 Q-3,-4 2,-0.5 C3.5,-0.2 5,-1 6,-2.5 Q6.5,-3.5 5.5,-4.2" 
+                fill="#fef08a" 
+                stroke="#a16207" 
+                strokeWidth="0.5" 
+              />
+              {/* Feelers */}
+              <line x1="4.5" y1="-3" x2="5.5" y2="-5.5" stroke="#a16207" strokeWidth="0.4" />
+              <line x1="5.5" y1="-2.5" x2="7" y2="-4.8" stroke="#a16207" strokeWidth="0.4" />
+              {/* Shell */}
+              <circle cx="-3.5" cy="-3.5" r="4" fill="#fb923c" stroke="#ea580c" strokeWidth="0.5" />
+              {/* Shell Spiral */}
+              <path d="M-3.5,-3.5 A1.5,1.5 0 0,0 -5,-2 A1,1 0 0,0 -4,-1" fill="none" stroke="#ea580c" strokeWidth="0.4" />
+            </g>
+          )}
+
+          {/* 3. Lucky Ladybug */}
+          {unlockedCollectibles.ladybug && visibleCollectibles.ladybug && (
+            <g 
+              className={`ladybug ${ladybugFluttering ? 'ladybug-flutter' : ''}`} 
+              transform="translate(123.5, 138)" 
+              onClick={handleLadybugClick}
+              style={{ cursor: 'pointer' }}
+            >
+              {/* Legs */}
+              <path d="M-3,-2 L-5,-3.5 M-3.5,0.5 L-6,0.5 M-3,3 L-5,4.5" stroke="#1f2937" strokeWidth="0.5" />
+              <path d="M3,-2 L5,-3.5 M3.5,0.5 L6,0.5 M3,3 L5,4.5" stroke="#1f2937" strokeWidth="0.5" />
+              {/* Body */}
+              <ellipse cx="0" cy="0.5" rx="3" ry="3.8" fill="#1f2937" />
+              {/* Head */}
+              <circle cx="0" cy="-3.2" r="1.5" fill="#111827" />
+              {/* Wings */}
+              <path className="wing-l" d="M-0.3,-1.2 C-3,-1.2 -4.5,1.8 -3,3.8 C-2.5,4.2 -1.2,4.6 -0.3,0.8 Z" fill="#ef4444" stroke="#991b1b" strokeWidth="0.4" />
+              <path className="wing-r" d="M0.3,-1.2 C3,-1.2 4.5,1.8 3,3.8 C2.5,4.2 1.2,4.6 0.3,0.8 Z" fill="#ef4444" stroke="#991b1b" strokeWidth="0.4" />
+              {/* Dots */}
+              <circle cx="-1.4" cy="0.8" r="0.5" fill="#111827" />
+              <circle cx="1.4" cy="0.8" r="0.5" fill="#111827" />
+              <circle cx="-0.8" cy="2.5" r="0.5" fill="#111827" />
+              <circle cx="0.8" cy="2.5" r="0.5" fill="#111827" />
+            </g>
+          )}
+
+          {/* 4. Energy Crystal */}
+          {unlockedCollectibles.crystal && visibleCollectibles.crystal && (
+            <g 
+              className={`crystal-group ${crystalActive ? 'crystal-glow' : ''}`} 
+              transform="translate(42, 165)" 
+              onClick={handleCrystalClick}
+              style={{ cursor: 'pointer' }}
+            >
+              {/* Crystal Shards */}
+              <polygon points="-4,0 -7,-12 -2,-17 3,-12 0,0" fill="#d8b4fe" stroke="#9333ea" strokeWidth="0.5" className="crystal-shard shard-1" />
+              <polygon points="0,0 -1,-8 4,-13 8,-8 4,0" fill="#a855f7" stroke="#7e22ce" strokeWidth="0.5" className="crystal-shard shard-2" />
+              <polygon points="-8,0 -10,-5 -7,-8 -4,-4 -4,0" fill="#f3e8ff" stroke="#a855f7" strokeWidth="0.5" className="crystal-shard shard-3" />
+              
+              {/* Sparkle particles */}
+              {crystalSparkles.map(p => (
+                <circle 
+                  key={p.id} 
+                  cx="0" 
+                  cy="-10" 
+                  r="1.5" 
+                  fill={p.color} 
+                  className="sparkle-particle" 
+                  style={{
+                    '--tx': `${p.tx}px`,
+                    '--ty': `${p.ty}px`
+                  }} 
+                />
+              ))}
+            </g>
+          )}
+
+          {/* 5. Mini Gnome */}
+          {unlockedCollectibles.gnome && visibleCollectibles.gnome && (
+            <g 
+              className={`gnome-group ${gnomeBouncing ? 'gnome-bounce' : ''}`} 
+              transform="translate(158, 165)" 
+              onClick={handleGnomeClick}
+              style={{ cursor: 'pointer' }}
+            >
+              {/* Body */}
+              <rect x="-3" y="-10" width="6" height="10" rx="1" fill="#3b82f6" stroke="#1d4ed8" strokeWidth="0.5" />
+              {/* Beard */}
+              <path d="M-3,-10 C-3,-3 3,-3 3,-10 Z" fill="#f9fafb" stroke="#d1d5db" strokeWidth="0.4" />
+              {/* Nose */}
+              <circle cx="0" cy="-9.5" r="1.5" fill="#fed7aa" stroke="#f97316" strokeWidth="0.4" />
+              {/* Pointy Hat */}
+              <polygon points="-4,-10 0,-22 4,-10" fill="#ef4444" stroke="#b91c1c" strokeWidth="0.5" />
+              {/* Belt */}
+              <line x1="-3" y1="-5" x2="3" y2="-5" stroke="#111827" strokeWidth="0.8" />
+              
+              {/* Wooden Sign */}
+              <g transform="translate(10, 0)">
+                {/* Pole */}
+                <line x1="0" y1="0" x2="0" y2="-15" stroke="#78350f" strokeWidth="1.2" />
+                {/* Board */}
+                <rect x="-8" y="-21" width="16" height="8" rx="0.5" fill="#d97706" stroke="#78350f" strokeWidth="0.5" />
+                {/* Sign Text lines */}
+                <line x1="-5" y1="-17" x2="5" y2="-17" stroke="#78350f" strokeWidth="0.5" />
+                <line x1="-4" y1="-19" x2="4" y2="-19" stroke="#78350f" strokeWidth="0.5" />
+              </g>
+            </g>
+          )}
+
+          {/* 6. Bluebird */}
+          {unlockedCollectibles.bluebird && visibleCollectibles.bluebird && (
+            <g
+              className={`bluebird-group ${birdSinging ? 'bird-singing' : ''}`}
+              transform="translate(142, 153)"
+              onClick={handleBirdClick}
+              style={{ cursor: 'pointer' }}
+            >
+              {/* Legs */}
+              <line x1="-2" y1="5" x2="-3" y2="12" stroke="#d97706" strokeWidth="1" />
+              <line x1="2" y1="5" x2="3" y2="12" stroke="#d97706" strokeWidth="1" />
+              
+              {/* Tail */}
+              <polygon points="-6,2 -13,7 -10,0" fill="#2563eb" />
+              
+              {/* Body */}
+              <ellipse cx="0" cy="0" rx="8" ry="6" fill="#3b82f6" />
+              
+              {/* Belly */}
+              <ellipse cx="2" cy="2" rx="5" ry="3.5" fill="#93c5fd" />
+              
+              {/* Head */}
+              <circle cx="6" cy="-6" r="5" fill="#3b82f6" />
+              
+              {/* Beak */}
+              <polygon points="10,-8 13,-6 10,-4" fill="#fbbf24" />
+              
+              {/* Eye */}
+              <circle cx="6" cy="-7" r="0.75" fill="#111827" />
+              
+              {/* Wing */}
+              <path
+                className="bird-wing"
+                d="M -2,-2 C -5,-8 -10,-4 -4,3 Z"
+                fill="#1d4ed8"
+                style={{
+                  transformOrigin: '-2px -2px',
+                  animation: birdSinging ? 'wingFlap 0.15s infinite alternate' : 'none'
+                }}
+              />
+            </g>
+          )}
+
+          {/* Bluebird Speech Bubble */}
+          {birdSinging && (
+            <g className="speech-bubble-svg" style={{ '--ox': '142px', '--oy': '147px' }}>
+              <rect x="107" y="110" width="70" height="22" rx="5" fill="rgba(7, 10, 20, 0.9)" stroke="rgba(255,255,255,0.18)" strokeWidth="0.75" />
+              <polygon points="142,132 148,132 145,137" fill="rgba(7, 10, 20, 0.9)" stroke="rgba(255,255,255,0.18)" strokeWidth="0.75" />
+              <text x="142" y="124" fill="#e2e8f0" fontSize="7" fontWeight="600" textAnchor="middle">♪ Pío! 🐦</text>
+            </g>
+          )}
 
           {/* Watering can (only animate for current month) */}
           {isViewingCurrentMonth && (
             <g>
               {isWatering && (
-                <g className="water-droplets">
-                  <circle cx="88" cy="90" r="1.5" fill="var(--accent-cyan)" className="drop-1" />
-                  <circle cx="93" cy="90" r="1.8" fill="var(--accent-cyan)" className="drop-2" />
-                  <circle cx="98" cy="90" r="1.5" fill="var(--accent-cyan)" className="drop-3" />
+                <g className="water-droplets" style={isGoldCanActive ? { filter: 'drop-shadow(0 0 4px #fbbf24)' } : undefined}>
+                  <circle cx="88" cy="90" r="1.5" fill={dropColor} className="drop-1" />
+                  <circle cx="93" cy="90" r="1.8" fill={dropColor} className="drop-2" />
+                  <circle cx="98" cy="90" r="1.5" fill={dropColor} className="drop-3" />
                 </g>
               )}
               
@@ -676,6 +1184,24 @@ export default function CozyGarden({ currentStreak, isTakenToday, logs, theme })
                   <path d="M0 16 L-15 10 L-18 12" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2.5" strokeLinecap="round" />
                 </g>
               </g>
+            </g>
+          )}
+
+          {/* Snail Speech Bubble */}
+          {snailSpeech && (
+            <g className="speech-bubble-svg" style={{ '--ox': '71px', '--oy': '122px' }}>
+              <rect x="5" y="65" width="112" height="24" rx="5" fill="rgba(7, 10, 20, 0.9)" stroke="rgba(255,255,255,0.18)" strokeWidth="0.75" />
+              <polygon points="66,89 72,89 71,94" fill="rgba(7, 10, 20, 0.9)" stroke="rgba(255,255,255,0.18)" strokeWidth="0.75" />
+              <text x="61" y="79" fill="#e2e8f0" fontSize="6.8" fontWeight="600" textAnchor="middle">{snailSpeech}</text>
+            </g>
+          )}
+
+          {/* Gnome Speech Bubble */}
+          {gnomeSpeech && (
+            <g className="speech-bubble-svg" style={{ '--ox': '158px', '--oy': '165px' }}>
+              <rect x="95" y="105" width="100" height="24" rx="5" fill="rgba(7, 10, 20, 0.9)" stroke="rgba(255,255,255,0.18)" strokeWidth="0.75" />
+              <polygon points="154,129 160,129 158,134" fill="rgba(7, 10, 20, 0.9)" stroke="rgba(255,255,255,0.18)" strokeWidth="0.75" />
+              <text x="145" y="120" fill="#e2e8f0" fontSize="6.8" fontWeight="600" textAnchor="middle">{gnomeSpeech}</text>
             </g>
           )}
         </svg>
@@ -734,11 +1260,7 @@ export default function CozyGarden({ currentStreak, isTakenToday, logs, theme })
           >
             {isWatering ? 'Regando... 💦' : '¡Regar de nuevo! 💧'}
           </button>
-        ) : (
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px' }}>
-            Completa tu ritual de hoy para regar tu planta
-          </div>
-        )
+        ) : null
       ) : (
         <button 
           onClick={() => {
@@ -763,9 +1285,18 @@ export default function CozyGarden({ currentStreak, isTakenToday, logs, theme })
         </button>
       )}
 
-      {/* COLLAPSIBLE WINDOWSILL SHELF SECTION */}
-      {hasItemsOnShelf && (
-        <div style={{ marginTop: '20px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '15px' }}>
+      {/* Doggo the Border Collie Pet */}
+      {unlockedCollectibles.dog && visibleCollectibles.dog && (
+        <>
+          <div style={{ height: '45px' }} />
+          <DashboardPet isTakenToday={isTakenToday} isDue={isDue} />
+        </>
+      )}
+    </div> {/* Close main garden card */}
+
+    {/* COLLAPSIBLE WINDOWSILL SHELF SECTION */}
+    {hasItemsOnShelf && (
+      <div className="glass-panel" style={{ marginTop: '20px', padding: '20px', textAlign: 'center' }}>
           <button
             onClick={() => setShowShelf(!showShelf)}
             style={{
@@ -897,6 +1428,10 @@ export default function CozyGarden({ currentStreak, isTakenToday, logs, theme })
         </div>
       )}
 
+
+
+
+
       {/* Overlay Modal Celebration when registering the pill */}
       {isWateringModalOpen && createPortal(
         <div className="garden-card" style={{
@@ -1009,10 +1544,10 @@ export default function CozyGarden({ currentStreak, isTakenToday, logs, theme })
               {/* Watering can animation */}
               <g>
                 {isWatering && (
-                  <g className="water-droplets">
-                    <circle cx="88" cy="90" r="1.5" fill="var(--accent-cyan)" className="drop-1" />
-                    <circle cx="93" cy="90" r="1.8" fill="var(--accent-cyan)" className="drop-2" />
-                    <circle cx="98" cy="90" r="1.5" fill="var(--accent-cyan)" className="drop-3" />
+                  <g className="water-droplets" style={isGoldCanActive ? { filter: 'drop-shadow(0 0 4px #fbbf24)' } : undefined}>
+                    <circle cx="88" cy="90" r="1.5" fill={dropColor} className="drop-1" />
+                    <circle cx="93" cy="90" r="1.8" fill={dropColor} className="drop-2" />
+                    <circle cx="98" cy="90" r="1.5" fill={dropColor} className="drop-3" />
                   </g>
                 )}
                 
@@ -1041,6 +1576,6 @@ export default function CozyGarden({ currentStreak, isTakenToday, logs, theme })
         </div>,
         document.body
       )}
-    </div>
+    </>
   );
 }
