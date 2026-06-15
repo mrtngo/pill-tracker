@@ -6,6 +6,7 @@ import CalendarView from './components/CalendarView';
 import StatsView from './components/StatsView';
 import SettingsView from './components/SettingsView';
 import StoreView from './components/StoreView';
+import { COLLECTIBLE_PRICES, calculateEarnedTokens } from './components/CozyGarden';
 
 export const THEME_PRICES = {
   amber: 15,
@@ -37,8 +38,25 @@ export default function App() {
     unlockedThemes,
     toggleCollectible,
     buyCollectible,
-    buyTheme
   } = usePillData();
+
+  const totalEarnedTokens = calculateEarnedTokens(logs) + (import.meta.env.DEV ? 100000 : 0);
+  
+  const spentCollectibles = Object.entries(unlockedCollectibles || {}).reduce((sum, [key, isUnlocked]) => {
+    if (isUnlocked) {
+      return sum + (COLLECTIBLE_PRICES[key] || 0);
+    }
+    return sum;
+  }, 0);
+
+  const spentThemes = Object.entries(unlockedThemes || {}).reduce((sum, [key, isUnlocked]) => {
+    if (isUnlocked && key !== 'cyan') {
+      return sum + (THEME_PRICES[key] || 0);
+    }
+    return sum;
+  }, 0);
+
+  const availableTokens = totalEarnedTokens - (spentCollectibles + spentThemes);
 
   const [activeTab, setActiveTab] = useState('dashboard');
 
@@ -226,6 +244,25 @@ export default function App() {
           </div>
           <span className="brand-name">ChuchiTracker</span>
         </div>
+        
+        {/* Token Balance */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          background: 'rgba(255, 255, 255, 0.05)',
+          padding: '6px 12px',
+          borderRadius: '16px',
+          fontSize: '12px',
+          fontWeight: '700',
+          color: 'var(--text-primary)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+          boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
+        }}>
+          <span>🪙</span>
+          <span style={{ color: 'var(--accent-cyan)' }}>{availableTokens}</span>
+        </div>
+
         <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>
           Mi Ritual
         </div>
