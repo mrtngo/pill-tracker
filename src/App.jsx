@@ -38,6 +38,7 @@ export default function App() {
     unlockedThemes,
     toggleCollectible,
     buyCollectible,
+    buyTheme
   } = usePillData();
 
   const totalEarnedTokens = calculateEarnedTokens(logs) + (import.meta.env.DEV ? 100000 : 0);
