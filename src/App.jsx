@@ -248,25 +248,7 @@ export default function App() {
         {/* Token Balance */}
         <div 
           onClick={() => setActiveTab('store')}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            background: 'rgba(255, 255, 255, 0.05)',
-            padding: '6px 12px',
-            borderRadius: '16px',
-            fontSize: '12px',
-            fontWeight: '700',
-            color: 'var(--text-primary)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
-            cursor: 'pointer',
-            userSelect: 'none',
-            transition: 'transform 0.1s ease, background 0.2s ease'
-          }}
-          onMouseDown={(e) => e.currentTarget.style.transform = 'scale(0.95)'}
-          onMouseUp={(e) => e.currentTarget.style.transform = 'scale(1)'}
-          onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          className="header-token-badge"
         >
           <span>🪙</span>
           <span style={{ color: 'var(--accent-cyan)' }}>{availableTokens}</span>
