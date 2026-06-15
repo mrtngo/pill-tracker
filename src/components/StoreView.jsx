@@ -250,21 +250,19 @@ export default function StoreView({
                 </p>
 
                 {isUnlocked ? (
-                  /* Toggle Visibility Switch */
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
-                    <label className="cozy-switch-label" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: '600' }}>
-                      <span className="cozy-switch">
-                        <input
-                          type="checkbox"
-                          checked={isVisible}
-                          onChange={(e) => toggleCollectible(key, e.target.checked)}
-                        />
-                        <span className="cozy-slider"></span>
-                      </span>
-                      <span style={{ color: isVisible ? 'var(--accent-cyan)' : 'var(--text-muted)' }}>
-                        {isVisible ? 'Visible en Jardín' : 'Oculto'}
-                      </span>
-                    </label>
+                  <div style={{ 
+                    fontSize: '11px', 
+                    color: '#10b981', 
+                    fontWeight: '700', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: '4px',
+                    background: 'rgba(16, 185, 129, 0.08)',
+                    padding: '4px 10px',
+                    borderRadius: '8px',
+                    width: 'fit-content'
+                  }}>
+                    <span>✓</span> Ya Comprado
                   </div>
                 ) : (
                   /* Buy Button */
