@@ -11,27 +11,10 @@ export default function StoreView({
   toggleCollectible,
   unlockedThemes = {},
   buyTheme,
+  availableTokens,
   onGoToGarden
 }) {
   const [successItem, setSuccessItem] = useState(null);
-
-  const totalEarnedTokens = calculateEarnedTokens(logs) + (import.meta.env.DEV ? 100000 : 0);
-  
-  const spentCollectibles = Object.entries(unlockedCollectibles).reduce((sum, [key, isUnlocked]) => {
-    if (isUnlocked) {
-      return sum + (COLLECTIBLE_PRICES[key] || 0);
-    }
-    return sum;
-  }, 0);
-
-  const spentThemes = Object.entries(unlockedThemes).reduce((sum, [key, isUnlocked]) => {
-    if (isUnlocked && key !== 'cyan') {
-      return sum + (THEME_PRICES[key] || 0);
-    }
-    return sum;
-  }, 0);
-
-  const availableTokens = totalEarnedTokens - (spentCollectibles + spentThemes);
 
   const items = [
     { key: 'snail', name: 'Caracolito', icon: '🐌', desc: 'Un caracol sabio que da consejos al tocarlo.' },

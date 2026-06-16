@@ -70,7 +70,8 @@ export default async function handler(req, res) {
         pushMessage: device.push_message || 'No olvides registrar tu hábito de hoy. Toca para registrar.',
         unlockedCollectibles: device.unlocked_collectibles || {},
         visibleCollectibles: device.visible_collectibles || {},
-        unlockedThemes: device.unlocked_themes || {}
+        unlockedThemes: device.unlocked_themes || {},
+        tokens: device.tokens ?? 50
       } : null;
 
       return res.status(200).json({ success: true, settings, logs });
@@ -111,7 +112,8 @@ export default async function handler(req, res) {
             push_message: settings ? (settings.pushMessage || 'No olvides registrar tu hábito de hoy. Toca para registrar.') : 'No olvides registrar tu hábito de hoy. Toca para registrar.',
             unlocked_collectibles: settings ? (settings.unlockedCollectibles || {}) : {},
             visible_collectibles: settings ? (settings.visibleCollectibles || {}) : {},
-            unlocked_themes: settings ? (settings.unlockedThemes || {}) : {}
+            unlocked_themes: settings ? (settings.unlockedThemes || {}) : {},
+            tokens: settings ? (settings.tokens ?? 50) : 50
           });
         if (insertDevError) throw insertDevError;
       }
@@ -129,7 +131,8 @@ export default async function handler(req, res) {
             push_message: settings.pushMessage || 'No olvides registrar tu hábito de hoy. Toca para registrar.',
             unlocked_collectibles: settings.unlockedCollectibles || {},
             visible_collectibles: settings.visibleCollectibles || {},
-            unlocked_themes: settings.unlockedThemes || {}
+            unlocked_themes: settings.unlockedThemes || {},
+            tokens: settings.tokens ?? 50
           });
 
         if (settingsErr) throw settingsErr;

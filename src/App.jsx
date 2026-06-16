@@ -38,26 +38,9 @@ export default function App() {
     unlockedThemes,
     toggleCollectible,
     buyCollectible,
-    buyTheme
+    buyTheme,
+    availableTokens
   } = usePillData();
-
-  const totalEarnedTokens = calculateEarnedTokens(logs) + (import.meta.env.DEV ? 100000 : 0);
-  
-  const spentCollectibles = Object.entries(unlockedCollectibles || {}).reduce((sum, [key, isUnlocked]) => {
-    if (isUnlocked) {
-      return sum + (COLLECTIBLE_PRICES[key] || 0);
-    }
-    return sum;
-  }, 0);
-
-  const spentThemes = Object.entries(unlockedThemes || {}).reduce((sum, [key, isUnlocked]) => {
-    if (isUnlocked && key !== 'cyan') {
-      return sum + (THEME_PRICES[key] || 0);
-    }
-    return sum;
-  }, 0);
-
-  const availableTokens = totalEarnedTokens - (spentCollectibles + spentThemes);
 
   const [activeTab, setActiveTab] = useState('dashboard');
 
@@ -158,6 +141,7 @@ export default function App() {
             visibleCollectibles={visibleCollectibles}
             unlockedThemes={unlockedThemes}
             toggleCollectible={toggleCollectible}
+            availableTokens={availableTokens}
             onGoToStore={() => setActiveTab('store')}
           />
         );
@@ -171,6 +155,7 @@ export default function App() {
             toggleCollectible={toggleCollectible}
             unlockedThemes={unlockedThemes}
             buyTheme={buyTheme}
+            availableTokens={availableTokens}
             onGoToGarden={() => setActiveTab('dashboard')}
           />
         );

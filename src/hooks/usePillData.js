@@ -91,9 +91,37 @@ export const usePillData = () => {
     return stored ? { ...defaults, ...JSON.parse(stored) } : defaults;
   });
 
+  const [tokens, setTokens] = useState(() => {
+    if (import.meta.env.DEV) return 100000;
+    const stored = localStorage.getItem('aegis_tokens');
+    if (stored !== null) return parseInt(stored, 10);
+    
+    // Fallback calculation for initial state
+    const storedLogs = localStorage.getItem('aegis_pill_logs');
+    const parsedLogs = storedLogs ? JSON.parse(storedLogs) : {};
+    const totalEarned = calculateEarnedTokens(parsedLogs);
+    
+    const storedUnlocked = localStorage.getItem('aegis_unlocked_collectibles');
+    const unlockedColl = storedUnlocked ? JSON.parse(storedUnlocked) : {};
+    const storedUnlockedThemes = localStorage.getItem('aegis_unlocked_themes');
+    const unlockedTh = storedUnlockedThemes ? JSON.parse(storedUnlockedThemes) : {};
+    
+    const spentCollectibles = Object.entries(unlockedColl).reduce((sum, [k, isUnlocked]) => {
+      if (isUnlocked) return sum + (COLLECTIBLE_PRICES[k] || 0);
+      return sum;
+    }, 0);
+    const spentThemes = Object.entries(unlockedTh).reduce((sum, [k, isUnlocked]) => {
+      if (isUnlocked && k !== 'cyan') return sum + (THEME_PRICES[k] || 0);
+      return sum;
+    }, 0);
+    
+    return totalEarned - (spentCollectibles + spentThemes);
+  });
+
   const unlockedCollectiblesRef = useRef(unlockedCollectibles);
   const visibleCollectiblesRef = useRef(visibleCollectibles);
   const unlockedThemesRef = useRef(unlockedThemes);
+  const tokensRef = useRef(tokens);
 
   useEffect(() => {
     unlockedCollectiblesRef.current = unlockedCollectibles;
@@ -106,6 +134,10 @@ export const usePillData = () => {
   useEffect(() => {
     unlockedThemesRef.current = unlockedThemes;
   }, [unlockedThemes]);
+
+  useEffect(() => {
+    tokensRef.current = tokens;
+  }, [tokens]);
 
 
 
@@ -149,6 +181,10 @@ export const usePillData = () => {
     localStorage.setItem('aegis_unlocked_themes', JSON.stringify(unlockedThemes));
   }, [unlockedThemes]);
 
+  useEffect(() => {
+    localStorage.setItem('aegis_tokens', tokens.toString());
+  }, [tokens]);
+
 
   // Cloud Sync POST helper
   const syncData = useCallback(async (newLogs, newSettings) => {
@@ -165,6 +201,7 @@ export const usePillData = () => {
             unlockedCollectibles: unlockedCollectiblesRef.current,
             visibleCollectibles: visibleCollectiblesRef.current,
             unlockedThemes: unlockedThemesRef.current,
+            tokens: tokensRef.current,
             ...newSettings
           },
           logs: newLogs,
@@ -212,9 +249,12 @@ export const usePillData = () => {
             const localThemesStr = localStorage.getItem('aegis_unlocked_themes');
             const localThemes = localThemesStr ? { ...themeDefaults, ...JSON.parse(localThemesStr) } : themeDefaults;
 
+            const localTokens = parseInt(localStorage.getItem('aegis_tokens') || '50', 10);
+
             let mergedUnlocked = { ...localUnlocked };
             let mergedVisible = { ...localVisible };
             let mergedThemes = { ...localThemes };
+            let mergedTokens = localTokens;
             let hasNewPurchasesToSync = false;
 
             if (data.settings) {
@@ -248,6 +288,17 @@ export const usePillData = () => {
               setUnlockedCollectibles(mergedUnlocked);
               setVisibleCollectibles(mergedVisible);
               setUnlockedThemes(mergedThemes);
+
+              const cloudTokens = data.settings.tokens ?? 50;
+              if (!isDirty && data.settings.tokens !== undefined) {
+                mergedTokens = cloudTokens;
+              }
+              if (mergedTokens !== localTokens) {
+                hasNewPurchasesToSync = true;
+              }
+              setTokens(mergedTokens);
+            } else {
+              setTokens(localTokens);
             }
 
             let currentLogs = {};
@@ -290,7 +341,8 @@ export const usePillData = () => {
                 pushMessage: isDirty ? localPushMessage : (data.settings?.pushMessage || localPushMessage),
                 unlockedCollectibles: mergedUnlocked,
                 visibleCollectibles: mergedVisible,
-                unlockedThemes: mergedThemes
+                unlockedThemes: mergedThemes,
+                tokens: isDirty ? localTokens : (data.settings?.tokens ?? localTokens)
               };
 
               try {
@@ -316,7 +368,10 @@ export const usePillData = () => {
   const logPill = useCallback((dateStr, status = 'taken') => {
     setLogs((prev) => {
       const updated = { ...prev };
-      if (status && status.startsWith('taken')) {
+      const wasTaken = !!prev[dateStr]?.taken;
+      const isNowTaken = status && status.startsWith('taken');
+
+      if (isNowTaken) {
         updated[dateStr] = {
           taken: true,
           timestamp: Date.now(),
@@ -331,8 +386,18 @@ export const usePillData = () => {
       } else {
         delete updated[dateStr];
       }
+
+      let updatedTokens = tokensRef.current;
+      if (isNowTaken && !wasTaken) {
+        updatedTokens = updatedTokens + 1;
+        setTokens(updatedTokens);
+      } else if (!isNowTaken && wasTaken) {
+        updatedTokens = Math.max(0, updatedTokens - 1);
+        setTokens(updatedTokens);
+      }
+
       // Sync with cloud database
-      syncData(updated, { pillName, reminderTime, startDate, theme, pushMessage });
+      syncData(updated, { pillName, reminderTime, startDate, theme, pushMessage, tokens: updatedTokens });
       return updated;
     });
   }, [syncData, pillName, reminderTime, startDate, theme, pushMessage]);
@@ -530,11 +595,9 @@ export const usePillData = () => {
   }, [logs, pillName, reminderTime, startDate, theme, pushMessage, unlockedCollectibles, unlockedThemes, syncData]);
 
   const buyCollectible = useCallback((key, price) => {
-    const totalEarnedTokens = calculateEarnedTokens(logs) + (import.meta.env.DEV ? 100000 : 0);
-    const spentTokens = getSpentTokens(unlockedCollectibles, unlockedThemes);
-    const availableTokens = totalEarnedTokens - spentTokens;
-
-    if (availableTokens >= price) {
+    if (tokens >= price) {
+      const updatedTokens = tokens - price;
+      setTokens(updatedTokens);
       setUnlockedCollectibles(prev => {
         const updated = { ...prev, [key]: true };
         syncData(logs, {
@@ -545,21 +608,20 @@ export const usePillData = () => {
           pushMessage,
           unlockedCollectibles: updated,
           visibleCollectibles,
-          unlockedThemes
+          unlockedThemes,
+          tokens: updatedTokens
         }).catch((err) => console.warn('Failed to sync collectible purchase:', err));
         return updated;
       });
       return true;
     }
     return false;
-  }, [logs, unlockedCollectibles, unlockedThemes, visibleCollectibles, pillName, reminderTime, startDate, theme, pushMessage, syncData]);
+  }, [tokens, logs, unlockedCollectibles, unlockedThemes, visibleCollectibles, pillName, reminderTime, startDate, theme, pushMessage, syncData]);
 
   const buyTheme = useCallback((themeId, price) => {
-    const totalEarnedTokens = calculateEarnedTokens(logs) + (import.meta.env.DEV ? 100000 : 0);
-    const spentTokens = getSpentTokens(unlockedCollectibles, unlockedThemes);
-    const availableTokens = totalEarnedTokens - spentTokens;
-
-    if (availableTokens >= price) {
+    if (tokens >= price) {
+      const updatedTokens = tokens - price;
+      setTokens(updatedTokens);
       setUnlockedThemes(prev => {
         const updated = { ...prev, [themeId]: true };
         syncData(logs, {
@@ -570,14 +632,15 @@ export const usePillData = () => {
           pushMessage,
           unlockedCollectibles,
           visibleCollectibles,
-          unlockedThemes: updated
+          unlockedThemes: updated,
+          tokens: updatedTokens
         }).catch((err) => console.warn('Failed to sync theme purchase:', err));
         return updated;
       });
       return true;
     }
     return false;
-  }, [logs, unlockedCollectibles, unlockedThemes, visibleCollectibles, pillName, reminderTime, startDate, theme, pushMessage, syncData]);
+  }, [tokens, logs, unlockedCollectibles, unlockedThemes, visibleCollectibles, pillName, reminderTime, startDate, theme, pushMessage, syncData]);
 
   const { currentStreak, longestStreak } = calculateStreaks();
   const stats = getStats();
@@ -608,6 +671,7 @@ export const usePillData = () => {
     unlockedThemes,
     toggleCollectible,
     buyCollectible,
-    buyTheme
+    buyTheme,
+    availableTokens: tokens
   };
 };
