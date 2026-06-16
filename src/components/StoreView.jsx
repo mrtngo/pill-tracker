@@ -12,6 +12,7 @@ export default function StoreView({
   unlockedThemes = {},
   buyTheme,
   availableTokens,
+  totalTokens,
   onGoToGarden
 }) {
   const [successItem, setSuccessItem] = useState(null);
@@ -159,12 +160,16 @@ export default function StoreView({
             gap: '5px',
             border: '1px solid rgba(0, 242, 254, 0.15)'
           }}>
-            🪙 <strong style={{ fontSize: '15px' }}>{availableTokens}</strong> Tokens
+            🪙 <strong style={{ fontSize: '15px' }}>{availableTokens}</strong> / {totalTokens} Tokens
           </span>
         </div>
         
         <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.5' }}>
           Gana 🪙 1 token cada día que marques tu ritual de toma y 🪙 10 tokens adicionales por cada mes que logres completar (etapa 5 de crecimiento). ¡Canjéalos por decoraciones mágicas para tu jardín!
+          <br />
+          <span style={{ color: 'var(--text-muted)', fontSize: '11px', display: 'block', marginTop: '4px' }}>
+            Tokens disponibles para gastar: 🪙 <strong>{availableTokens}</strong> (de un total de 🪙 <strong>{totalTokens}</strong> ganados).
+          </span>
         </p>
       </div>
 

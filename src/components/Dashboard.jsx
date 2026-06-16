@@ -21,6 +21,7 @@ export default function Dashboard({
   unlockedThemes = {},
   toggleCollectible,
   availableTokens,
+  totalTokens,
   onGoToStore
 }) {
   const todayStr = getLocalDateString();
@@ -284,7 +285,7 @@ export default function Dashboard({
             <div style={{ textAlign: 'left' }}>
               <h3 style={{ fontSize: '15px', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>Repisa de Colección</h3>
               <p style={{ fontSize: '11px', color: 'var(--text-secondary)', margin: '2px 0 0 0' }}>
-                Tienes 🪙 <strong style={{ color: 'var(--accent-cyan)' }}>{availableTokens}</strong> tokens
+                Tienes 🪙 <strong style={{ color: 'var(--accent-cyan)' }}>{availableTokens}</strong> tokens (Total ganados: 🪙 {totalTokens})
               </p>
             </div>
           </div>

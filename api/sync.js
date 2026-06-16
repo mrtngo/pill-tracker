@@ -71,7 +71,8 @@ export default async function handler(req, res) {
         unlockedCollectibles: device.unlocked_collectibles || {},
         visibleCollectibles: device.visible_collectibles || {},
         unlockedThemes: device.unlocked_themes || {},
-        tokens: device.tokens ?? 50
+        tokens: device.tokens ?? 50,
+        totalTokens: device.total_tokens ?? 50
       } : null;
 
       return res.status(200).json({ success: true, settings, logs });
@@ -113,7 +114,8 @@ export default async function handler(req, res) {
             unlocked_collectibles: settings ? (settings.unlockedCollectibles || {}) : {},
             visible_collectibles: settings ? (settings.visibleCollectibles || {}) : {},
             unlocked_themes: settings ? (settings.unlockedThemes || {}) : {},
-            tokens: settings ? (settings.tokens ?? 50) : 50
+            tokens: settings ? (settings.tokens ?? 50) : 50,
+            total_tokens: settings ? (settings.totalTokens ?? 50) : 50
           });
         if (insertDevError) throw insertDevError;
       }
@@ -132,7 +134,8 @@ export default async function handler(req, res) {
             unlocked_collectibles: settings.unlockedCollectibles || {},
             visible_collectibles: settings.visibleCollectibles || {},
             unlocked_themes: settings.unlockedThemes || {},
-            tokens: settings.tokens ?? 50
+            tokens: settings.tokens ?? 50,
+            total_tokens: settings.totalTokens ?? 50
           });
 
         if (settingsErr) throw settingsErr;

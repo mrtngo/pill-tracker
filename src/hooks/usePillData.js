@@ -118,10 +118,22 @@ export const usePillData = () => {
     return totalEarned - (spentCollectibles + spentThemes);
   });
 
+  const [totalTokens, setTotalTokens] = useState(() => {
+    if (import.meta.env.DEV) return 100000;
+    const stored = localStorage.getItem('aegis_total_tokens');
+    if (stored !== null) return parseInt(stored, 10);
+    
+    // Fallback calculation for initial state
+    const storedLogs = localStorage.getItem('aegis_pill_logs');
+    const parsedLogs = storedLogs ? JSON.parse(storedLogs) : {};
+    return calculateEarnedTokens(parsedLogs);
+  });
+
   const unlockedCollectiblesRef = useRef(unlockedCollectibles);
   const visibleCollectiblesRef = useRef(visibleCollectibles);
   const unlockedThemesRef = useRef(unlockedThemes);
   const tokensRef = useRef(tokens);
+  const totalTokensRef = useRef(totalTokens);
 
   useEffect(() => {
     unlockedCollectiblesRef.current = unlockedCollectibles;
@@ -138,6 +150,10 @@ export const usePillData = () => {
   useEffect(() => {
     tokensRef.current = tokens;
   }, [tokens]);
+
+  useEffect(() => {
+    totalTokensRef.current = totalTokens;
+  }, [totalTokens]);
 
 
 
@@ -185,6 +201,10 @@ export const usePillData = () => {
     localStorage.setItem('aegis_tokens', tokens.toString());
   }, [tokens]);
 
+  useEffect(() => {
+    localStorage.setItem('aegis_total_tokens', totalTokens.toString());
+  }, [totalTokens]);
+
 
   // Cloud Sync POST helper
   const syncData = useCallback(async (newLogs, newSettings) => {
@@ -202,6 +222,7 @@ export const usePillData = () => {
             visibleCollectibles: visibleCollectiblesRef.current,
             unlockedThemes: unlockedThemesRef.current,
             tokens: tokensRef.current,
+            totalTokens: totalTokensRef.current,
             ...newSettings
           },
           logs: newLogs,
@@ -250,11 +271,13 @@ export const usePillData = () => {
             const localThemes = localThemesStr ? { ...themeDefaults, ...JSON.parse(localThemesStr) } : themeDefaults;
 
             const localTokens = parseInt(localStorage.getItem('aegis_tokens') || '50', 10);
+            const localTotalTokens = parseInt(localStorage.getItem('aegis_total_tokens') || '50', 10);
 
             let mergedUnlocked = { ...localUnlocked };
             let mergedVisible = { ...localVisible };
             let mergedThemes = { ...localThemes };
             let mergedTokens = localTokens;
+            let mergedTotalTokens = localTotalTokens;
             let hasNewPurchasesToSync = false;
 
             if (data.settings) {
@@ -297,8 +320,18 @@ export const usePillData = () => {
                 hasNewPurchasesToSync = true;
               }
               setTokens(mergedTokens);
+
+              const cloudTotalTokens = data.settings.totalTokens ?? 50;
+              if (!isDirty && data.settings.totalTokens !== undefined) {
+                mergedTotalTokens = cloudTotalTokens;
+              }
+              if (mergedTotalTokens !== localTotalTokens) {
+                hasNewPurchasesToSync = true;
+              }
+              setTotalTokens(mergedTotalTokens);
             } else {
               setTokens(localTokens);
+              setTotalTokens(localTotalTokens);
             }
 
             let currentLogs = {};
@@ -342,7 +375,8 @@ export const usePillData = () => {
                 unlockedCollectibles: mergedUnlocked,
                 visibleCollectibles: mergedVisible,
                 unlockedThemes: mergedThemes,
-                tokens: isDirty ? localTokens : (data.settings?.tokens ?? localTokens)
+                tokens: isDirty ? localTokens : (data.settings?.tokens ?? localTokens),
+                totalTokens: isDirty ? localTotalTokens : (data.settings?.totalTokens ?? localTotalTokens)
               };
 
               try {
@@ -388,16 +422,21 @@ export const usePillData = () => {
       }
 
       let updatedTokens = tokensRef.current;
+      let updatedTotalTokens = totalTokensRef.current;
       if (isNowTaken && !wasTaken) {
         updatedTokens = updatedTokens + 1;
+        updatedTotalTokens = updatedTotalTokens + 1;
         setTokens(updatedTokens);
+        setTotalTokens(updatedTotalTokens);
       } else if (!isNowTaken && wasTaken) {
         updatedTokens = Math.max(0, updatedTokens - 1);
+        updatedTotalTokens = Math.max(0, updatedTotalTokens - 1);
         setTokens(updatedTokens);
+        setTotalTokens(updatedTotalTokens);
       }
 
       // Sync with cloud database
-      syncData(updated, { pillName, reminderTime, startDate, theme, pushMessage, tokens: updatedTokens });
+      syncData(updated, { pillName, reminderTime, startDate, theme, pushMessage, tokens: updatedTokens, totalTokens: updatedTotalTokens });
       return updated;
     });
   }, [syncData, pillName, reminderTime, startDate, theme, pushMessage]);
@@ -609,7 +648,8 @@ export const usePillData = () => {
           unlockedCollectibles: updated,
           visibleCollectibles,
           unlockedThemes,
-          tokens: updatedTokens
+          tokens: updatedTokens,
+          totalTokens: totalTokensRef.current
         }).catch((err) => console.warn('Failed to sync collectible purchase:', err));
         return updated;
       });
@@ -633,7 +673,8 @@ export const usePillData = () => {
           unlockedCollectibles,
           visibleCollectibles,
           unlockedThemes: updated,
-          tokens: updatedTokens
+          tokens: updatedTokens,
+          totalTokens: totalTokensRef.current
         }).catch((err) => console.warn('Failed to sync theme purchase:', err));
         return updated;
       });
@@ -672,6 +713,7 @@ export const usePillData = () => {
     toggleCollectible,
     buyCollectible,
     buyTheme,
-    availableTokens: tokens
+    availableTokens: tokens,
+    totalTokens: totalTokens
   };
 };

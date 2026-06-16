@@ -39,7 +39,8 @@ export default function App() {
     toggleCollectible,
     buyCollectible,
     buyTheme,
-    availableTokens
+    availableTokens,
+    totalTokens
   } = usePillData();
 
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -142,6 +143,7 @@ export default function App() {
             unlockedThemes={unlockedThemes}
             toggleCollectible={toggleCollectible}
             availableTokens={availableTokens}
+            totalTokens={totalTokens}
             onGoToStore={() => setActiveTab('store')}
           />
         );
@@ -156,6 +158,7 @@ export default function App() {
             unlockedThemes={unlockedThemes}
             buyTheme={buyTheme}
             availableTokens={availableTokens}
+            totalTokens={totalTokens}
             onGoToGarden={() => setActiveTab('dashboard')}
           />
         );

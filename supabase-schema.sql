@@ -12,6 +12,8 @@ CREATE TABLE IF NOT EXISTS devices (
   unlocked_collectibles JSONB NOT NULL DEFAULT '{}'::jsonb,
   visible_collectibles JSONB NOT NULL DEFAULT '{}'::jsonb,
   unlocked_themes JSONB NOT NULL DEFAULT '{}'::jsonb,
+  tokens INTEGER NOT NULL DEFAULT 50,
+  total_tokens INTEGER NOT NULL DEFAULT 50,
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
