@@ -275,8 +275,31 @@ export const usePillData = () => {
             const localThemesStr = localStorage.getItem('aegis_unlocked_themes');
             const localThemes = localThemesStr ? { ...themeDefaults, ...JSON.parse(localThemesStr) } : themeDefaults;
 
-            const localTokens = parseInt(localStorage.getItem('aegis_tokens') || '50', 10);
-            const localTotalTokens = parseInt(localStorage.getItem('aegis_total_tokens') || '50', 10);
+            // Self-healing tokens calculation to prevent race conditions or default database overrides
+            const getSpentAmount = (unlockedColl, unlockedTh) => {
+              const spentCollectibles = Object.entries(unlockedColl).reduce((sum, [k, isUnlocked]) => {
+                if (isUnlocked) return sum + (COLLECTIBLE_PRICES[k] || 0);
+                return sum;
+              }, 0);
+              const spentThemes = Object.entries(unlockedTh).reduce((sum, [k, isUnlocked]) => {
+                if (isUnlocked && k !== 'cyan') return sum + (THEME_PRICES[k] || 0);
+                return sum;
+              }, 0);
+              return spentCollectibles + spentThemes;
+            };
+
+            const healingLogs = localStorage.getItem('aegis_pill_logs');
+            const healingParsed = healingLogs ? JSON.parse(healingLogs) : {};
+            const calculatedTotal = calculateEarnedTokens(healingParsed);
+            const calculatedAvailable = calculatedTotal - getSpentAmount(localUnlocked, localThemes);
+
+            const localTokens = localStorage.getItem('aegis_tokens') !== null 
+              ? parseInt(localStorage.getItem('aegis_tokens'), 10) 
+              : calculatedAvailable;
+
+            const localTotalTokens = localStorage.getItem('aegis_total_tokens') !== null 
+              ? parseInt(localStorage.getItem('aegis_total_tokens'), 10) 
+              : calculatedTotal;
 
             let mergedUnlocked = { ...localUnlocked };
             let mergedVisible = { ...localVisible };
@@ -284,6 +307,13 @@ export const usePillData = () => {
             let mergedTokens = localTokens;
             let mergedTotalTokens = localTotalTokens;
             let hasNewPurchasesToSync = false;
+
+            // Correct any available token mismatch (e.g. from default 50 cloud overrides)
+            const expectedAvailable = mergedTotalTokens - getSpentAmount(mergedUnlocked, mergedThemes);
+            if (mergedTokens !== expectedAvailable) {
+              mergedTokens = expectedAvailable;
+              hasNewPurchasesToSync = true;
+            }
 
             if (data.settings) {
               const cloudUnlocked = data.settings.unlockedCollectibles || {};
