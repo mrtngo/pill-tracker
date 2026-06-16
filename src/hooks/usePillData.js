@@ -31,7 +31,12 @@ export const getDaysDifference = (startStr, endStr) => {
 };
 
 // Use a single static UUID because this is a dedicated single-user app
-const getOrCreateDeviceId = () => '00000000-0000-0000-0000-000000000000';
+const getOrCreateDeviceId = () => {
+  if (import.meta.env.DEV) {
+    return '11111111-1111-1111-1111-111111111111'; // Dev sandbox ID
+  }
+  return '00000000-0000-0000-0000-000000000000';
+};
 
 // Generate or retrieve a persistent client UUID for request log device differentiation
 const getOrCreateClientId = () => {
