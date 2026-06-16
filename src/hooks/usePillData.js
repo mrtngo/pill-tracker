@@ -308,13 +308,6 @@ export const usePillData = () => {
             let mergedTotalTokens = localTotalTokens;
             let hasNewPurchasesToSync = false;
 
-            // Correct any available token mismatch (e.g. from default 50 cloud overrides)
-            const expectedAvailable = mergedTotalTokens - getSpentAmount(mergedUnlocked, mergedThemes);
-            if (mergedTokens !== expectedAvailable) {
-              mergedTokens = expectedAvailable;
-              hasNewPurchasesToSync = true;
-            }
-
             if (data.settings) {
               const cloudUnlocked = data.settings.unlockedCollectibles || {};
               const cloudVisible = data.settings.visibleCollectibles || {};
@@ -367,6 +360,15 @@ export const usePillData = () => {
             } else {
               setTokens(localTokens);
               setTotalTokens(localTotalTokens);
+            }
+
+            // Self-healing: correct available tokens if they don't match (total - spent)
+            // This runs AFTER cloud merge so it has the final say over stale DB defaults
+            const finalExpected = mergedTotalTokens - getSpentAmount(mergedUnlocked, mergedThemes);
+            if (mergedTokens !== finalExpected) {
+              mergedTokens = finalExpected;
+              setTokens(mergedTokens);
+              hasNewPurchasesToSync = true;
             }
 
             let currentLogs = {};
