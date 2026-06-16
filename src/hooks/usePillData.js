@@ -362,15 +362,6 @@ export const usePillData = () => {
               setTotalTokens(localTotalTokens);
             }
 
-            // Self-healing: correct available tokens if they don't match (total - spent)
-            // This runs AFTER cloud merge so it has the final say over stale DB defaults
-            const finalExpected = mergedTotalTokens - getSpentAmount(mergedUnlocked, mergedThemes);
-            if (mergedTokens !== finalExpected) {
-              mergedTokens = finalExpected;
-              setTokens(mergedTokens);
-              hasNewPurchasesToSync = true;
-            }
-
             let currentLogs = {};
             // Load local logs first
             const storedLogs = localStorage.getItem('aegis_pill_logs');
@@ -397,6 +388,22 @@ export const usePillData = () => {
               }
             }
 
+            // Self-healing: recalculate totalTokens from merged logs (catches month bonuses)
+            // and derive availableTokens as totalTokens - spent. Runs AFTER both cloud merge
+            // and log merge so it uses the most complete data and has the final say.
+            const recalcTotal = calculateEarnedTokens(currentLogs);
+            if (mergedTotalTokens !== recalcTotal) {
+              mergedTotalTokens = recalcTotal;
+              setTotalTokens(mergedTotalTokens);
+              hasNewPurchasesToSync = true;
+            }
+            const expectedAvailable = mergedTotalTokens - getSpentAmount(mergedUnlocked, mergedThemes);
+            if (mergedTokens !== expectedAvailable) {
+              mergedTokens = expectedAvailable;
+              setTokens(mergedTokens);
+              hasNewPurchasesToSync = true;
+            }
+
             // Check if there are any local logs that are not synced to the cloud yet
             const hasNewLogsToUpload = data.logs ? Object.keys(currentLogs).some(date => {
               return !data.logs[date] || data.logs[date].status !== currentLogs[date].status;
@@ -412,8 +419,8 @@ export const usePillData = () => {
                 unlockedCollectibles: mergedUnlocked,
                 visibleCollectibles: mergedVisible,
                 unlockedThemes: mergedThemes,
-                tokens: isDirty ? localTokens : (data.settings?.tokens ?? localTokens),
-                totalTokens: isDirty ? localTotalTokens : (data.settings?.totalTokens ?? localTotalTokens)
+                tokens: mergedTokens,
+                totalTokens: mergedTotalTokens
               };
 
               try {
