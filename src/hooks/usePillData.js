@@ -134,11 +134,18 @@ export const usePillData = () => {
     return calculateEarnedTokens(parsedLogs);
   });
 
+  const [bonusTokens, setBonusTokens] = useState(() => {
+    if (import.meta.env.DEV) return 0;
+    const stored = localStorage.getItem('aegis_bonus_tokens');
+    return stored !== null ? parseInt(stored, 10) : 0;
+  });
+
   const unlockedCollectiblesRef = useRef(unlockedCollectibles);
   const visibleCollectiblesRef = useRef(visibleCollectibles);
   const unlockedThemesRef = useRef(unlockedThemes);
   const tokensRef = useRef(tokens);
   const totalTokensRef = useRef(totalTokens);
+  const bonusTokensRef = useRef(bonusTokens);
 
   useEffect(() => {
     unlockedCollectiblesRef.current = unlockedCollectibles;
@@ -159,6 +166,10 @@ export const usePillData = () => {
   useEffect(() => {
     totalTokensRef.current = totalTokens;
   }, [totalTokens]);
+
+  useEffect(() => {
+    bonusTokensRef.current = bonusTokens;
+  }, [bonusTokens]);
 
 
 
@@ -210,10 +221,29 @@ export const usePillData = () => {
     localStorage.setItem('aegis_total_tokens', totalTokens.toString());
   }, [totalTokens]);
 
+  useEffect(() => {
+    localStorage.setItem('aegis_bonus_tokens', bonusTokens.toString());
+  }, [bonusTokens]);
+
 
   // Cloud Sync POST helper
   const syncData = useCallback(async (newLogs, newSettings) => {
     try {
+      const settingsPayload = {
+        unlockedCollectibles: unlockedCollectiblesRef.current,
+        visibleCollectibles: visibleCollectiblesRef.current,
+        unlockedThemes: unlockedThemesRef.current,
+        bonusTokens: bonusTokensRef.current,
+        tokens: tokensRef.current,
+        totalTokens: totalTokensRef.current,
+        ...newSettings
+      };
+      settingsPayload.unlockedCollectibles = {
+        ...unlockedCollectiblesRef.current,
+        ...(newSettings?.unlockedCollectibles || {}),
+        __bonusTokens: settingsPayload.bonusTokens ?? bonusTokensRef.current
+      };
+
       const response = await fetch('/api/sync', {
         method: 'POST',
         headers: {
@@ -222,14 +252,7 @@ export const usePillData = () => {
         body: JSON.stringify({
           deviceId,
           clientId,
-          settings: {
-            unlockedCollectibles: unlockedCollectiblesRef.current,
-            visibleCollectibles: visibleCollectiblesRef.current,
-            unlockedThemes: unlockedThemesRef.current,
-            tokens: tokensRef.current,
-            totalTokens: totalTokensRef.current,
-            ...newSettings
-          },
+          settings: settingsPayload,
           logs: newLogs,
           pwa: isPWA()
         })
@@ -290,7 +313,10 @@ export const usePillData = () => {
 
             const healingLogs = localStorage.getItem('aegis_pill_logs');
             const healingParsed = healingLogs ? JSON.parse(healingLogs) : {};
-            const calculatedTotal = calculateEarnedTokens(healingParsed);
+            const localBonusTokens = localStorage.getItem('aegis_bonus_tokens') !== null
+              ? parseInt(localStorage.getItem('aegis_bonus_tokens'), 10)
+              : 0;
+            const calculatedTotal = calculateEarnedTokens(healingParsed) + localBonusTokens;
             const calculatedAvailable = calculatedTotal - getSpentAmount(localUnlocked, localThemes);
 
             const localTokens = localStorage.getItem('aegis_tokens') !== null 
@@ -306,12 +332,16 @@ export const usePillData = () => {
             let mergedThemes = { ...localThemes };
             let mergedTokens = localTokens;
             let mergedTotalTokens = localTotalTokens;
+            let mergedBonusTokens = localBonusTokens;
             let hasNewPurchasesToSync = false;
 
             if (data.settings) {
               const cloudUnlocked = data.settings.unlockedCollectibles || {};
               const cloudVisible = data.settings.visibleCollectibles || {};
               const cloudThemes = data.settings.unlockedThemes || {};
+              mergedBonusTokens = Number(cloudUnlocked.__bonusTokens ?? data.settings.bonusTokens ?? localBonusTokens ?? 0);
+              mergedUnlocked.__bonusTokens = mergedBonusTokens;
+              setBonusTokens(mergedBonusTokens);
 
               // Merge logic: If unlocked on EITHER device, mark as unlocked
               Object.keys(collDefaults).forEach(k => {
@@ -358,6 +388,7 @@ export const usePillData = () => {
               }
               setTotalTokens(mergedTotalTokens);
             } else {
+              setBonusTokens(mergedBonusTokens);
               setTokens(localTokens);
               setTotalTokens(localTotalTokens);
             }
@@ -391,7 +422,7 @@ export const usePillData = () => {
             // Self-healing: recalculate totalTokens from merged logs (catches month bonuses)
             // and derive availableTokens as totalTokens - spent. Runs AFTER both cloud merge
             // and log merge so it uses the most complete data and has the final say.
-            const recalcTotal = calculateEarnedTokens(currentLogs);
+            const recalcTotal = calculateEarnedTokens(currentLogs) + mergedBonusTokens;
             if (mergedTotalTokens !== recalcTotal) {
               mergedTotalTokens = recalcTotal;
               setTotalTokens(mergedTotalTokens);
@@ -416,9 +447,10 @@ export const usePillData = () => {
                 startDate: isDirty ? localStartDate : (data.settings?.startDate || localStartDate),
                 theme: isDirty ? localTheme : (data.settings?.theme || localTheme),
                 pushMessage: isDirty ? localPushMessage : (data.settings?.pushMessage || localPushMessage),
-                unlockedCollectibles: mergedUnlocked,
+                unlockedCollectibles: { ...mergedUnlocked, __bonusTokens: mergedBonusTokens },
                 visibleCollectibles: mergedVisible,
                 unlockedThemes: mergedThemes,
+                bonusTokens: mergedBonusTokens,
                 tokens: mergedTokens,
                 totalTokens: mergedTotalTokens
               };
