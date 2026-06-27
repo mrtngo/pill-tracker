@@ -9,6 +9,8 @@ export const THEME_PRICES = {
   sage: 60
 };
 
+export const FIXED_START_DATE = '2026-06-01';
+
 export const getLocalDateString = (date = new Date()) => {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -67,7 +69,7 @@ export const usePillData = () => {
   });
 
   const [startDate, setStartDate] = useState(() => {
-    return localStorage.getItem('aegis_start_date') || getLocalDateString();
+    return FIXED_START_DATE;
   });
 
   const [theme, setTheme] = useState(() => {
@@ -187,7 +189,11 @@ export const usePillData = () => {
   }, [reminderTime]);
 
   useEffect(() => {
-    localStorage.setItem('aegis_start_date', startDate);
+    if (startDate !== FIXED_START_DATE) {
+      setStartDate(FIXED_START_DATE);
+      return;
+    }
+    localStorage.setItem('aegis_start_date', FIXED_START_DATE);
   }, [startDate]);
 
   useEffect(() => {
@@ -238,6 +244,7 @@ export const usePillData = () => {
         totalTokens: totalTokensRef.current,
         ...newSettings
       };
+      settingsPayload.startDate = FIXED_START_DATE;
       settingsPayload.unlockedCollectibles = {
         ...unlockedCollectiblesRef.current,
         ...(newSettings?.unlockedCollectibles || {}),
@@ -279,7 +286,7 @@ export const usePillData = () => {
             // Read local settings from localStorage as the source of truth if dirty
             const localPillName = localStorage.getItem('aegis_pill_name') || 'Pastilla Diaria';
             const localReminderTime = localStorage.getItem('aegis_reminder_time') || '21:00';
-            const localStartDate = localStorage.getItem('aegis_start_date') || getLocalDateString();
+            const localStartDate = FIXED_START_DATE;
             const localTheme = localStorage.getItem('aegis_theme') || 'cyan';
             const localPushMessage = localStorage.getItem('aegis_push_message') || 'No olvides registrar tu hábito de hoy. Toca para registrar.';
 
@@ -410,7 +417,7 @@ export const usePillData = () => {
             if (data.settings && !isDirty) {
               setPillName(data.settings.pillName);
               setReminderTime(data.settings.reminderTime);
-              setStartDate(data.settings.startDate);
+              setStartDate(FIXED_START_DATE);
               if (data.settings.theme) {
                 setTheme(data.settings.theme);
               }
@@ -444,7 +451,7 @@ export const usePillData = () => {
               const settingsToSync = {
                 pillName: isDirty ? localPillName : (data.settings?.pillName || localPillName),
                 reminderTime: isDirty ? localReminderTime : (data.settings?.reminderTime || localReminderTime),
-                startDate: isDirty ? localStartDate : (data.settings?.startDate || localStartDate),
+                startDate: FIXED_START_DATE,
                 theme: isDirty ? localTheme : (data.settings?.theme || localTheme),
                 pushMessage: isDirty ? localPushMessage : (data.settings?.pushMessage || localPushMessage),
                 unlockedCollectibles: { ...mergedUnlocked, __bonusTokens: mergedBonusTokens },
@@ -521,11 +528,11 @@ export const usePillData = () => {
   const updateSettings = useCallback((name, time, start, newPushMsg) => {
     setPillName(name);
     setReminderTime(time);
-    setStartDate(start);
+    setStartDate(FIXED_START_DATE);
     setPushMessage(newPushMsg);
     localStorage.setItem('aegis_settings_dirty', 'true');
     
-    syncData(logs, { pillName: name, reminderTime: time, startDate: start, theme, pushMessage: newPushMsg })
+    syncData(logs, { pillName: name, reminderTime: time, startDate: FIXED_START_DATE, theme, pushMessage: newPushMsg })
       .then(() => {
         localStorage.removeItem('aegis_settings_dirty');
       })
@@ -554,14 +561,14 @@ export const usePillData = () => {
     if (newLogs) setLogs(newLogs);
     if (name) setPillName(name);
     if (time) setReminderTime(time);
-    if (start) setStartDate(start);
+    setStartDate(FIXED_START_DATE);
     if (newTheme) setTheme(newTheme);
     if (newPushMsg) setPushMessage(newPushMsg);
     // Sync all imported data to cloud
     syncData(newLogs || logs, {
       pillName: name || pillName,
       reminderTime: time || reminderTime,
-      startDate: start || startDate,
+      startDate: FIXED_START_DATE,
       theme: newTheme || theme,
       pushMessage: newPushMsg || pushMessage
     });
@@ -572,7 +579,7 @@ export const usePillData = () => {
     setLogs({});
     setPillName('Pastilla Diaria');
     setReminderTime('21:00');
-    setStartDate(getLocalDateString());
+    setStartDate(FIXED_START_DATE);
     setTheme('cyan');
     setPushMessage('No olvides registrar tu hábito de hoy. Toca para registrar.');
     localStorage.removeItem('aegis_last_notified_date');
@@ -580,7 +587,7 @@ export const usePillData = () => {
     syncData({}, {
       pillName: 'Pastilla Diaria',
       reminderTime: '21:00',
-      startDate: getLocalDateString(),
+      startDate: FIXED_START_DATE,
       theme: 'cyan',
       pushMessage: 'No olvides registrar tu hábito de hoy. Toca para registrar.'
     });

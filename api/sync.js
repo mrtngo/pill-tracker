@@ -4,6 +4,7 @@ import { logRequest } from './_utils/logger.js';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const FIXED_START_DATE = '2026-06-01';
 
 const supabase = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseServiceKey || 'placeholder');
 
@@ -65,7 +66,7 @@ export default async function handler(req, res) {
       const settings = device ? {
         pillName: device.pill_name,
         reminderTime: device.reminder_time,
-        startDate: device.start_date,
+        startDate: FIXED_START_DATE,
         theme: device.theme || 'cyan',
         pushMessage: device.push_message || 'No olvides registrar tu hábito de hoy. Toca para registrar.',
         unlockedCollectibles: device.unlocked_collectibles || {},
@@ -108,7 +109,7 @@ export default async function handler(req, res) {
             id: deviceId,
             pill_name: settings ? settings.pillName : 'Pastilla Diaria',
             reminder_time: settings ? settings.reminderTime : '21:00',
-            start_date: settings ? settings.startDate : new Date().toISOString().split('T')[0],
+            start_date: FIXED_START_DATE,
             theme: settings ? (settings.theme || 'cyan') : 'cyan',
             push_message: settings ? (settings.pushMessage || 'No olvides registrar tu hábito de hoy. Toca para registrar.') : 'No olvides registrar tu hábito de hoy. Toca para registrar.',
             unlocked_collectibles: settings ? (settings.unlockedCollectibles || {}) : {},
@@ -128,7 +129,7 @@ export default async function handler(req, res) {
             id: deviceId,
             pill_name: settings.pillName,
             reminder_time: settings.reminderTime,
-            start_date: settings.startDate,
+            start_date: FIXED_START_DATE,
             theme: settings.theme || 'cyan',
             push_message: settings.pushMessage || 'No olvides registrar tu hábito de hoy. Toca para registrar.',
             unlocked_collectibles: settings.unlockedCollectibles || {},

@@ -4,6 +4,7 @@ import { logRequest } from './_utils/logger.js';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const FIXED_START_DATE = '2026-06-01';
 
 const supabase = createClient(supabaseUrl || 'https://placeholder.supabase.co', supabaseServiceKey || 'placeholder');
 
@@ -74,7 +75,7 @@ export default async function handler(req, res) {
             id: deviceId,
             pill_name: 'Pastilla Diaria',
             reminder_time: '21:00',
-            start_date: new Date().toISOString().split('T')[0]
+            start_date: FIXED_START_DATE
           });
         if (insertDevError) throw insertDevError;
       }

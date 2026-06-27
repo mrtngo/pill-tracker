@@ -4,6 +4,7 @@ import { logRequest } from './_utils/logger.js';
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const FIXED_START_DATE = '2026-06-01';
 
 // Check configuration
 if (!supabaseUrl || !supabaseServiceKey) {
@@ -34,7 +35,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
 
-  const { deviceId, subscription, reminderTime, timezoneOffset, pillName, startDate } = req.body;
+  const { deviceId, subscription, reminderTime, timezoneOffset, pillName } = req.body;
 
   if (!deviceId || !subscription || !subscription.endpoint || !reminderTime || timezoneOffset === undefined || !pillName) {
     return res.status(400).json({ error: 'Missing required parameters' });
@@ -49,7 +50,7 @@ export default async function handler(req, res) {
           id: deviceId,
           pill_name: pillName,
           reminder_time: reminderTime,
-          start_date: startDate || new Date().toISOString().split('T')[0]
+          start_date: FIXED_START_DATE
         }
       );
 
