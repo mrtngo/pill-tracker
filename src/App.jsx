@@ -47,6 +47,9 @@ export default function App() {
 
   const [toast, setToast] = useState({ message: '', visible: false });
   const [moodModal, setMoodModal] = useState({ visible: false, dateStr: '', onSelect: null });
+  const [dogPromptVisible, setDogPromptVisible] = useState(false);
+
+  const dogPrice = COLLECTIBLE_PRICES.dog;
 
   const showToast = (message) => {
     setToast({ message, visible: true });
@@ -64,6 +67,29 @@ export default function App() {
       return () => clearTimeout(timer);
     }
   }, [toast.visible]);
+
+  useEffect(() => {
+    const hasSeenDogPrompt = localStorage.getItem('aegis_dog_prompt_seen') === 'true';
+    if (!hasSeenDogPrompt && !unlockedCollectibles.dog && availableTokens >= dogPrice) {
+      const timer = setTimeout(() => setDogPromptVisible(true), 900);
+      return () => clearTimeout(timer);
+    }
+  }, [availableTokens, dogPrice, unlockedCollectibles.dog]);
+
+  const dismissDogPrompt = () => {
+    localStorage.setItem('aegis_dog_prompt_seen', 'true');
+    setDogPromptVisible(false);
+  };
+
+  const buyDogFromPrompt = () => {
+    const success = buyCollectible('dog', dogPrice);
+    localStorage.setItem('aegis_dog_prompt_seen', 'true');
+    setDogPromptVisible(false);
+    if (success) {
+      showToast('¡Doggo se unió a tu jardín!');
+      setActiveTab('dashboard');
+    }
+  };
 
   // Handle URL query parameters on startup (e.g. ?action=confirm)
   useEffect(() => {
@@ -354,6 +380,27 @@ export default function App() {
               </button>
               <button className="mood-action-btn cancel" onClick={() => setMoodModal({ visible: false, dateStr: '', onSelect: null })}>
                 Cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {dogPromptVisible && (
+        <div className="mood-modal-overlay">
+          <div className="mood-modal-card glass-panel glow dog-prompt-card">
+            <div className="dog-prompt-icon">🐶</div>
+            <h3>Ya puedes desbloquear a Doggo</h3>
+            <p className="subtitle dog-prompt-copy">
+              Tienes 🪙 {availableTokens} tokens. Doggo puede acompañarte en el jardín por 🪙 {dogPrice}.
+            </p>
+
+            <div className="mood-modal-actions">
+              <button className="mood-action-btn skip" onClick={buyDogFromPrompt}>
+                Desbloquear Doggo
+              </button>
+              <button className="mood-action-btn cancel" onClick={dismissDogPrompt}>
+                Después
               </button>
             </div>
           </div>
