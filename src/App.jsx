@@ -86,7 +86,7 @@ export default function App() {
     localStorage.setItem('aegis_dog_prompt_seen', 'true');
     setDogPromptVisible(false);
     if (success) {
-      showToast('¡Doggo se unió a tu jardín!');
+      showToast('¡Perro se unió a tu jardín!');
       setActiveTab('dashboard');
     }
   };
@@ -390,14 +390,14 @@ export default function App() {
         <div className="mood-modal-overlay">
           <div className="mood-modal-card glass-panel glow dog-prompt-card">
             <div className="dog-prompt-icon">🐶</div>
-            <h3>Ya puedes desbloquear a Doggo</h3>
+            <h3>Ya puedes desbloquear a Perro</h3>
             <p className="subtitle dog-prompt-copy">
-              Tienes 🪙 {availableTokens} tokens. Doggo puede acompañarte en el jardín por 🪙 {dogPrice}.
+              Tienes 🪙 {availableTokens} tokens. Perro puede acompañarte en el jardín por 🪙 {dogPrice}.
             </p>
 
             <div className="mood-modal-actions">
               <button className="mood-action-btn skip" onClick={buyDogFromPrompt}>
-                Desbloquear Doggo
+                Desbloquear Perro
               </button>
               <button className="mood-action-btn cancel" onClick={dismissDogPrompt}>
                 Después

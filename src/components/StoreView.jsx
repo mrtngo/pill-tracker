@@ -25,7 +25,7 @@ export default function StoreView({
     { key: 'vines', name: 'Enredaderas', icon: '🌿', desc: 'Hojas trepadoras que decoran los bordes de la pantalla.' },
     { key: 'crystal', name: 'Cristal Místico', icon: '💎', desc: 'Un cristal mágico que destella al presionarlo.' },
     { key: 'magicSky', name: 'Cielo Estrellado', icon: '🌌', desc: 'Estrellas titilantes y polvillo mágico flotando en tu panel.' },
-    { key: 'dog', name: 'Doggo', icon: '🐶', desc: 'El perrito Doggo te acompaña al pie del jardín.' },
+    { key: 'dog', name: 'Perro', icon: '🐶', desc: 'El perrito te acompaña al pie del jardín.' },
     { key: 'gnome', name: 'Gnomito Guardián', icon: '🧑‍🌾', desc: 'Un gnomo adorable que sostiene carteles motivacionales.' },
     { key: 'bluebird', name: 'Pajarito Cantor', icon: '🐦', desc: 'Un pajarito azul que canta y aletea al tocarlo.' },
     { key: 'goldCan', name: 'Regadora de Estrellas', icon: '✨', desc: 'Cambia las gotas de agua al regar por un polvillo dorado brillante.' }

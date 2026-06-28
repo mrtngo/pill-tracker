@@ -1285,7 +1285,7 @@ export default function CozyGarden({
         </button>
       )}
 
-      {/* Doggo the Border Collie Pet */}
+      {/* Perro the Border Collie Pet */}
       {unlockedCollectibles.dog && visibleCollectibles.dog && (
         <>
           <div style={{ height: '45px' }} />
