@@ -60,33 +60,10 @@ export default function WeeklyPostcard({
   logs,
   unlockedCollectibles = {},
   visibleCollectibles = {},
-  showToast,
   variant = 'card',
   onClose
 }) {
   const postcard = getWeeklyPostcardData(logs, unlockedCollectibles, visibleCollectibles);
-
-  const copyWeeklyPostcard = async () => {
-    const moodLine = postcard.weekDays
-      .map((day) => `${day.label}: ${day.taken ? (day.mood || '✓') : '·'}`)
-      .join('  ');
-    const text = [
-      `Postal de la semana (${postcard.title})`,
-      `${postcard.currentPlant}: ${postcard.completedCount}/7 rituales completados`,
-      `Mood más común: ${postcard.topMood}`,
-      postcard.hasPerro ? 'Perro acompañó el jardín.' : '',
-      moodLine,
-      postcard.caption
-    ].filter(Boolean).join('\n');
-
-    try {
-      await navigator.clipboard.writeText(text);
-      showToast?.('Postal copiada');
-    } catch (err) {
-      console.warn('Failed to copy weekly postcard:', err);
-      showToast?.('No se pudo copiar la postal');
-    }
-  };
 
   return (
     <div className={`glass-panel weekly-postcard ${variant === 'modal' ? 'postcard-modal-card' : ''}`}>
@@ -131,10 +108,6 @@ export default function WeeklyPostcard({
           </div>
         )}
       </div>
-
-      <button className="postcard-copy-btn" onClick={copyWeeklyPostcard}>
-        Copiar postal
-      </button>
     </div>
   );
 }

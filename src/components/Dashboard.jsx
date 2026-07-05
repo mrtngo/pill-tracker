@@ -393,7 +393,6 @@ export default function Dashboard({
         logs={logs}
         unlockedCollectibles={unlockedCollectibles}
         visibleCollectibles={visibleCollectibles}
-        showToast={showToast}
       />
 
       {/* Daily Motivation Card */}

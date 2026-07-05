@@ -479,8 +479,7 @@ p.subtitle {
 }
 
 .postcard-header,
-.postcard-body,
-.postcard-copy-btn {
+.postcard-body {
   position: relative;
   z-index: 1;
 }
@@ -610,20 +609,6 @@ p.subtitle {
   color: var(--text-primary);
   font-size: 12px;
   font-weight: 700;
-}
-
-.postcard-copy-btn {
-  width: 100%;
-  margin-top: 18px;
-  padding: 11px 14px;
-  border: none;
-  border-radius: 14px;
-  cursor: pointer;
-  color: #08090d;
-  background: var(--accent-gradient);
-  font-size: 13px;
-  font-weight: 800;
-  box-shadow: 0 6px 18px var(--accent-gradient-glow);
 }
 
 .postcard-modal-overlay {

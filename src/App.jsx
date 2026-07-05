@@ -428,7 +428,6 @@ export default function App() {
             logs={logs}
             unlockedCollectibles={unlockedCollectibles}
             visibleCollectibles={visibleCollectibles}
-            showToast={showToast}
             variant="modal"
             onClose={() => setWeeklyPostcardModalVisible(false)}
           />
