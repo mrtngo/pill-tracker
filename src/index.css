@@ -459,6 +459,173 @@ p.subtitle {
   color: var(--text-secondary);
 }
 
+.weekly-postcard {
+  position: relative;
+  overflow: hidden;
+  padding: 22px;
+  margin-bottom: 24px;
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+.weekly-postcard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 16% 18%, rgba(255, 117, 143, 0.14), transparent 28%),
+    radial-gradient(circle at 88% 12%, rgba(0, 242, 254, 0.12), transparent 24%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.04), transparent 54%);
+  pointer-events: none;
+}
+
+.postcard-header,
+.postcard-body,
+.postcard-copy-btn {
+  position: relative;
+  z-index: 1;
+}
+
+.postcard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.postcard-eyebrow {
+  color: var(--accent-cyan);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.postcard-header h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 800;
+}
+
+.postcard-stamp {
+  width: 58px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 18px;
+  font-size: 30px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+.postcard-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.postcard-plant {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.postcard-plant span {
+  font-size: 26px;
+}
+
+.postcard-plant div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.postcard-plant strong {
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.postcard-plant small {
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.postcard-mood-row {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.postcard-day {
+  min-width: 0;
+  min-height: 58px;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.postcard-day.taken {
+  background: rgba(0, 242, 254, 0.06);
+  border-color: rgba(0, 242, 254, 0.12);
+}
+
+.postcard-day span {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.postcard-day small {
+  color: var(--text-secondary);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.weekly-postcard p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.postcard-companion {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.postcard-copy-btn {
+  width: 100%;
+  margin-top: 18px;
+  padding: 11px 14px;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  color: #08090d;
+  background: var(--accent-gradient);
+  font-size: 13px;
+  font-weight: 800;
+  box-shadow: 0 6px 18px var(--accent-gradient-glow);
+}
+
 /* Animations helper styles */
 @keyframes popIn {
   from { transform: scale(0.95); opacity: 0; }
@@ -1502,5 +1669,4 @@ input:checked + .cozy-slider:before {
     transform: rotate(-45deg);
   }
 }
-
 

@@ -7,7 +7,7 @@ const MONTH_NAMES = [
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
 ];
 
-const PLANT_NAMES = [
+export const PLANT_NAMES = [
   "Sábila (Aloe)", "Suculenta Rosa", "Trébol de la Suerte", "Lirio de la Paz",
   "Cactus del Desierto", "Helecho Frondoso", "Girasol de Verano", "Árbol de Jade",
   "Bonsai de Otoño", "Orquídea Exótica", "Pino Silvestre", "Flor de Pascua"
