@@ -626,6 +626,40 @@ p.subtitle {
   box-shadow: 0 6px 18px var(--accent-gradient-glow);
 }
 
+.postcard-modal-overlay {
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+}
+
+.postcard-modal-card {
+  width: min(420px, 100%);
+  max-height: min(88vh, 680px);
+  overflow-y: auto;
+  margin-bottom: 0;
+  animation: scaleUp 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.35), 0 0 32px var(--accent-gradient-glow);
+}
+
+.postcard-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  background: rgba(8, 9, 13, 0.7);
+  color: var(--text-primary);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* Animations helper styles */
 @keyframes popIn {
   from { transform: scale(0.95); opacity: 0; }
@@ -1669,4 +1703,3 @@ input:checked + .cozy-slider:before {
     transform: rotate(-45deg);
   }
 }
-

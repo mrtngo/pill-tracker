@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { usePillData, getLocalDateString } from './hooks/usePillData';
+import React, { useCallback, useState, useEffect } from 'react';
+import { usePillData, getLocalDateString, parseLocalDate } from './hooks/usePillData';
 import { startReminderCheck, subscribeToPushNotifications } from './utils/notifications';
 import Dashboard from './components/Dashboard';
 import CalendarView from './components/CalendarView';
 import StatsView from './components/StatsView';
 import SettingsView from './components/SettingsView';
 import StoreView from './components/StoreView';
+import WeeklyPostcard from './components/WeeklyPostcard';
 import { COLLECTIBLE_PRICES, calculateEarnedTokens } from './components/CozyGarden';
 
 export const THEME_PRICES = {
@@ -48,6 +49,7 @@ export default function App() {
   const [toast, setToast] = useState({ message: '', visible: false });
   const [moodModal, setMoodModal] = useState({ visible: false, dateStr: '', onSelect: null });
   const [dogPromptVisible, setDogPromptVisible] = useState(false);
+  const [weeklyPostcardModalVisible, setWeeklyPostcardModalVisible] = useState(false);
 
   const dogPrice = COLLECTIBLE_PRICES.dog;
 
@@ -58,6 +60,19 @@ export default function App() {
   const promptMood = (dateStr, onSelect) => {
     setMoodModal({ visible: true, dateStr, onSelect });
   };
+
+  const logPillWithSundayPostcard = useCallback((dateStr, status = 'taken') => {
+    logPill(dateStr, status);
+
+    const isTaken = status && status.startsWith('taken');
+    const isSunday = parseLocalDate(dateStr).getDay() === 0;
+
+    if (isTaken && isSunday) {
+      setTimeout(() => {
+        setWeeklyPostcardModalVisible(true);
+      }, 700);
+    }
+  }, [logPill]);
 
   useEffect(() => {
     if (toast.visible) {
@@ -96,19 +111,19 @@ export default function App() {
     const params = new URLSearchParams(window.location.search);
     if (params.get('action') === 'confirm') {
       const todayStr = getLocalDateString();
-      logPill(todayStr, 'taken');
+      logPillWithSundayPostcard(todayStr, 'taken');
       showToast(`¡Tu ${pillName} de hoy ha sido registrada!`);
       // Clean up URL parameters so it doesn't log again on page reload
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [logPill, pillName]);
+  }, [logPillWithSundayPostcard, pillName]);
 
   // Listen to messages from the Service Worker
   useEffect(() => {
     const handleSWMessage = (event) => {
       if (event.data && event.data.type === 'LOG_PILL_TAKEN') {
         const todayStr = getLocalDateString();
-        logPill(todayStr, 'taken');
+        logPillWithSundayPostcard(todayStr, 'taken');
         showToast(`¡Tu ${pillName} de hoy ha sido registrada!`);
       }
     };
@@ -119,7 +134,7 @@ export default function App() {
         navigator.serviceWorker.removeEventListener('message', handleSWMessage);
       };
     }
-  }, [logPill, pillName]);
+  }, [logPillWithSundayPostcard, pillName]);
 
   // Auto-sync push subscription if local timezone offset changes (e.g. user travels)
   useEffect(() => {
@@ -156,7 +171,7 @@ export default function App() {
             deviceId={deviceId}
             clientId={clientId}
             logs={logs}
-            logPill={logPill}
+            logPill={logPillWithSundayPostcard}
             pillName={pillName}
             reminderTime={reminderTime}
             currentStreak={currentStreak}
@@ -192,7 +207,7 @@ export default function App() {
         return (
           <CalendarView
             logs={logs}
-            logPill={logPill}
+            logPill={logPillWithSundayPostcard}
             startDate={startDate}
             showToast={showToast}
             promptMood={promptMood}
@@ -404,6 +419,19 @@ export default function App() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {weeklyPostcardModalVisible && (
+        <div className="mood-modal-overlay postcard-modal-overlay">
+          <WeeklyPostcard
+            logs={logs}
+            unlockedCollectibles={unlockedCollectibles}
+            visibleCollectibles={visibleCollectibles}
+            showToast={showToast}
+            variant="modal"
+            onClose={() => setWeeklyPostcardModalVisible(false)}
+          />
         </div>
       )}
 
