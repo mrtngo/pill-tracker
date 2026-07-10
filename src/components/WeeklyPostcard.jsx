@@ -2,6 +2,13 @@ import React from 'react';
 import { getLocalDateString } from '../hooks/usePillData';
 import { PLANT_NAMES } from './CozyGarden';
 
+const FALLBACK_LOGGED_EMOJI = '💊';
+
+const getMoodFromStatus = (status) => {
+  if (!status || !status.includes(':')) return '';
+  return status.split(':').slice(1).join(':').trim();
+};
+
 export const getWeeklyPostcardData = (logs, unlockedCollectibles = {}, visibleCollectibles = {}) => {
   const today = new Date();
   const weekDays = Array.from({ length: 7 }, (_, idx) => {
@@ -9,14 +16,15 @@ export const getWeeklyPostcardData = (logs, unlockedCollectibles = {}, visibleCo
     date.setDate(today.getDate() - (6 - idx));
     const dateStr = getLocalDateString(date);
     const entry = logs[dateStr];
-    const mood = entry?.status?.includes(':') ? entry.status.split(':')[1] : '';
+    const mood = getMoodFromStatus(entry?.status);
 
     return {
       date,
       dateStr,
       label: date.toLocaleDateString('es-ES', { weekday: 'short' }).slice(0, 2),
       taken: !!entry?.taken,
-      mood
+      mood,
+      displayMood: entry?.taken ? (mood || FALLBACK_LOGGED_EMOJI) : '·'
     };
   });
 
@@ -93,7 +101,7 @@ export default function WeeklyPostcard({
         <div className="postcard-mood-row" aria-label="Resumen de moods de la semana">
           {postcard.weekDays.map((day) => (
             <div key={day.dateStr} className={`postcard-day ${day.taken ? 'taken' : ''}`}>
-              <span>{day.taken ? (day.mood || '✓') : '·'}</span>
+              <span>{day.displayMood}</span>
               <small>{day.label}</small>
             </div>
           ))}
