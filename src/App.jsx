@@ -6,6 +6,7 @@ import CalendarView from './components/CalendarView';
 import StatsView from './components/StatsView';
 import SettingsView from './components/SettingsView';
 import StoreView from './components/StoreView';
+import GamesView from './components/GamesView';
 import WeeklyPostcard from './components/WeeklyPostcard';
 import { COLLECTIBLE_PRICES, calculateEarnedTokens } from './components/CozyGarden';
 
@@ -223,6 +224,8 @@ export default function App() {
             stats={stats}
           />
         );
+      case 'games':
+        return <GamesView deviceId={deviceId} currentStreak={currentStreak} />;
       case 'settings':
         return (
           <SettingsView
@@ -296,7 +299,7 @@ export default function App() {
 
       {/* iOS & Android friendly Fixed Bottom Nav Bar */}
       <nav className="bottom-nav">
-        <button 
+        <button
           className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
           onClick={() => setActiveTab('dashboard')}
           aria-label="Panel"
@@ -351,6 +354,21 @@ export default function App() {
         </button>
 
         <button 
+          className={`nav-item ${activeTab === 'games' ? 'active' : ''}`}
+          onClick={() => setActiveTab('games')}
+          aria-label="Juegos"
+        >
+          <svg viewBox="0 0 24 24">
+            <path d="M7 8h10a5 5 0 0 1 4.7 6.7l-1 2.8a2.3 2.3 0 0 1-3.9.7l-1.3-1.7h-9L5.2 18.2a2.3 2.3 0 0 1-3.9-.7l-1-2.8A5 5 0 0 1 5 8h2z" />
+            <line x1="7" y1="11" x2="7" y2="15" />
+            <line x1="5" y1="13" x2="9" y2="13" />
+            <circle cx="16" cy="12" r=".7" fill="currentColor" />
+            <circle cx="18.5" cy="14.5" r=".7" fill="currentColor" />
+          </svg>
+          Juegos
+        </button>
+
+        <button
           className={`nav-item ${activeTab === 'settings' ? 'active' : ''}`}
           onClick={() => setActiveTab('settings')}
           aria-label="Ajustes"

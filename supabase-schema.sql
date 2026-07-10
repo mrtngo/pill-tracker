@@ -73,4 +73,9 @@ CREATE TABLE IF NOT EXISTS request_logs (
 
 CREATE INDEX IF NOT EXISTS idx_request_logs_device ON request_logs (device_id);
 CREATE INDEX IF NOT EXISTS idx_request_logs_created_at ON request_logs (created_at);
+create table if not exists game_saves (
+  device_id text primary key,
+  state jsonb not null default '{}'::jsonb,
+  updated_at timestamptz not null default now()
+);
 
